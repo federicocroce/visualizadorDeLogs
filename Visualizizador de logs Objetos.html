@@ -63,7 +63,7 @@
         <th>FECHA</th>
       </tr>
       <tr ng-repeat="section in allSections track by $index">
-        <td ng-repeat="value in section track by $index" ng-if="$index != 0" ng-class="{lastRow: section[0] == 'Total'}">
+        <td ng-repeat="value in section track by $index" ng-if="$index != 0" ng-class="{lastRow: section.name == 'Total'}">
             {{value}}
         </td>
       </tr>
@@ -83,7 +83,7 @@
           <th>FECHA</th>
         </tr>
       <tr ng-repeat="detail in services track by $index">
-        <td ng-repeat="value in detail track by $index" ng-if="$index != 0" ng-class="{lastRow: detail[0] == 'Total'}">
+        <td ng-repeat="value in detail track by $index" ng-if="$index != 0" ng-class="{lastRow: detail.name == 'Total'}">
             {{value}}
         </td>
         <td>
@@ -95,7 +95,7 @@
 
 
   <div ng-repeat="services in allErrorsServices track by $index" class="table">
-      <h1>{{services[0][0]}}</h1>
+      <h1>{{services[0].service}}</h1>
       <!--<h1>{{setErrorName(services)}}</h1>-->
       <table>
         <tr>
@@ -155,6 +155,7 @@
           allSections = [];
           allServices = [];
           allErrorsServices = [];
+          allErrorsDescriptions = [];
           allErrors = [];
           transactionsNames = [];
           for (var i = 0; i < files.length; i++) {
@@ -199,7 +200,8 @@ function setFila (target){
 
     // var secondSlice = firstSlice.slice(0, indexEnd);
 
-    var sectionContent = firstSlice.slice(0, findAll(firstSlice, curString, 0)).split('#');
+    var sectionContent = formatSectionServiceObject(firstSlice.slice(0, findAll(firstSlice, curString, 0)).split('#')); // Seccion
+    sectionContent.date  = fileName;
 
     var servicesContent = firstSlice.slice(findAll(firstSlice, curString, 0), findAll(firstSlice, curString, 1)).split('#');
 
@@ -230,17 +232,21 @@ function setFila (target){
     
 
     transactionsNames.forEach(function(element, index) {      
-      var services = firstSlice.slice(firstSlice.indexOf(element)).slice(0, findAll(firstSlice, "%", 1)).split('#');
-      console.log(services[0].trim());
+      var services = formatSectionServiceObject(firstSlice.slice(firstSlice.indexOf(element)).slice(0, findAll(firstSlice, "%", 1)).split
+      ('#'));
+      services.date = fileName;
+      // console.log(services[0].trim());
       firstEntry = true;
+
       setErrors(services, firstSlice, fileName);
       //////////////////////////////////////  seteo de  errores
-      services.push(fileName);
+      
       allServices[index].push(services);
     }, this);
 
 
-    sectionContent.push(fileName);
+    
+    // console.log(sectionContent);
 
     allSections.push(sectionContent);
 
@@ -257,6 +263,8 @@ function setFila (target){
           sorByDate (element, 7);
         }, this);
 
+        // console.log($scope.allSections);
+
         if(cantFiles == $scope.allSections.length){
           calculateTotal($scope.allSections);
           
@@ -264,16 +272,15 @@ function setFila (target){
            calculateTotal(element);          
          }, this);
 
-
          setErrorsServices();
 
          $scope.allErrorsServices = allErrorsServices;
 
-         $scope.allErrorsServices.forEach(function(element, index) {
-          sorByDate (element, 4);
-        }, this);
+        //  $scope.allErrorsServices.forEach(function(element, index) {
+        //   sorByDate (element, 4);
+        // }, this);
 
-        //  console.log(allErrors);
+         console.log(allErrorsDescriptions);
 
          
 
@@ -284,100 +291,69 @@ function setFila (target){
     });
   }
 
+  function formatSectionServiceObject (array){
+    return {
+      name: array[0].trim(),
+      executed: parseFloat(array[1].trim()),
+      successful: parseFloat(array[2].trim()),
+      warning: parseFloat(array[3].trim()),
+      successfulPercent: array[4].trim(),
+      errors: parseFloat(array[5].trim()),
+      errorsPercent: array[6].trim()
+    }
+  }
+
+  function formatErrorObject (array){
+    return {
+      service:array[0].trim(),
+      codigo: array[1].trim(),
+      description: array[2].trim(),
+      count: parseFloat(array[3].trim())
+    }
+  }
+
   function setErrorsServices (){
     transactionsNames.forEach(function(name, indexName) {  
-      allErrorsServices.push([]);    
+      allErrorsServices.push([]); 
+      var desc = [];   
+      allErrorsDescriptions.push([]);    
       allErrors.forEach(function(error) {
-        if(error[0].trim() == name)     
-        allErrorsServices[indexName].push(error);
+        if(error.service == name){  
+          allErrorsServices[indexName].push(error);
+
+          if(desc.length == 0){
+            desc.push({desc:error.description, serv:error.service, name: name, new: true});
+            allErrorsDescriptions[indexName].push({desc:error.description, serv:error.service, name: name, new: true});
+          } 
+          else{ 
+            allErrorsDescriptions[indexName].forEach(function(description) {
+              if(description.desc != error.description)
+              desc.push({desc:error.description, serv:error.service, name: name, new: false});
+            }, this);
+          }
+        }
       }, this);
+      allErrorsDescriptions[indexName] = desc;
     }, this);
   }
 
   function setErrors(services, firstSlice, fileName){ 
 
-    var allIndexBegin = findAll(stringToFindErrors, services[0].trim()); // obtengo todos los match en donde aparezca el servicio.
+    var allIndexBegin = findAll(stringToFindErrors, services.name.trim()); // obtengo todos los match en donde aparezca el servicio.
     var error = null;
 
 
     allIndexBegin.forEach(function(element) { // Obtengo los index de los lugares en donde aparece la transaccion
-      error = stringToFindErrors.slice(element, element + 150).split('#');  // Obtengo la linea del error
-      error.push(fileName);  // Obtengo la linea del error
+      error = formatErrorObject(stringToFindErrors.slice(element, element + 150).split('#'));  // Obtengo la linea del error
+      error.date = fileName;  // Obtengo la linea del error
       allErrors.push(error);
     }, this);
 
-
-
-
-
-
-
-
-
-   
-    // // var allIndexBegin = findAll(stringToFindErrors, services[0].trim()); // obtengo todos los match en donde aparezca el servicio.
-    // // var error = null;
-    // var indexError = null;
-
-    //   // if(allErrorsServices.length == 0){ // si es la primera vez que va a recorrer el arreglo de todos los errores de los servicios hago un push de un array vacio
-    //   //   allErrorsServices.push([]);
-    //   //   // var firstEntry = true;
-    //   // }
-    
-    // allIndexBegin.forEach(function(element) { // Obtengo los index de los lugares en donde aparece la transaccion
-    //   error = stringToFindErrors.slice(element, element + 150).split('#');  // Obtengo la linea del error
-    //   error.push(fileName);  // Obtengo la linea del error
-
-    //   // firstEntry = false;
-
-    //   if(allErrorsServices.length > 0) {  
-    //   allErrorsServices.forEach(function(serv, index) { // recorro el arreglo de todos los errores de los servicios
-
-    //     // if(allErrorsServices[0].length == 0){ // si es la primera vez que va a recorrer el arreglo de los errores hago un push del error
-    //     // firstEntry = true;
-    //     //   serv.push(error);
-    //     //   return;
-    //     // };
-    //     // if(indexError == 0 ){ 
-    //     //   indexError = "";
-    //     //   return;
-    //     // }
-    //     if(serv[0] != undefined){ 
-    //       indexError = serv[0][0].trim().indexOf(services[0].trim()) == 0 ? index : "-1"; // Pregunto si el nombre del servicio ya existe en el array de errores
-    //       console.log(serv[0][0].trim() +"  "+ services[0].trim())
-    //       if(indexError != undefined && indexError != "-1" ) return;
-    //     }
-
-    //   }, this);
-    // }
-
-          
-
-    //   // if(firstEntry) return;
-
-    //   // if(indexError == undefined || indexError == "") return;
-    //   if(indexError != undefined && indexError != "-1"){ // Si existe y no es la primera vez que entra
-    //     // if(firstEntry) firstEntry = false;
-    //     allErrorsServices[indexError].push(error);
-    //   }
-    //   else{
-    //     // if(firstEntry){ 
-    //     //    firstEntry = false;
-    //     //    return;
-    //     // }
-    //     var newError = []
-    //     newError.push(error);
-    //     allErrorsServices.push(newError);
-    //   }     
-
-    // }, this);
-
-    // // var indexError = null;
   }
 
   $scope.setName = function(array){
-    var endDate = array[array.length -2][7] =! undefined ? array[array.length -2][7] : null;
-    return array[0][0] + "  " + array[array.length -1][4] + "  " + array[0][7] + " / " + endDate;
+    var endDate = array[array.length -2].date =! undefined ? array[array.length -2].date : null;
+    return array[0].name + "  " + array[array.length -1].successfulPercent + "  " + array[0].date + " / " + endDate;
   }
 
   $scope.setErrorName = function(array){
@@ -386,74 +362,47 @@ function setFila (target){
 
   function calculateTotal(array){
 
-    var baseLaength = array.length;
+    // var baseLaength = array.length;
 
-    array.push([]);
-    var total = array[array.length -1];
+    // array.push([]);
+    var total = {
+      name: 0,
+      executed: 0,
+      successful: 0,
+      warning: 0,
+      successfulPercent: 0,
+      errors: 0,
+      errorsPercent: 0
+    };
 
-      array.forEach(function(element, index) {
+    array.forEach(function(element, index) {
+      total.name = "Total";
+      total.executed += element.executed;
+      total.successful += element.successful;
+      total.warning += element.warning;
+      total.errors += element.errors;
+    }, this);
 
-          if(baseLaength == index) return;
+    total.successfulPercent = (((total.successful +  total.warning)* 100)/total.executed).toFixed(2) + "%";
+    total.errorsPercent = ((total.errors * 100)/total.executed).toFixed(2) + "%";
 
-          element.forEach(function(value, i) {
-            if(index == 0){
-              array[array.length -1].push(0);
-            }
-            
-           switch(i) {
-              case 0: 
-                total[i] = "Total";
-              break;
-              case 1:
-              case 2:
-              case 3: 
-              case 5:
-                total[i] += parseFloat(value);
-              break;
-              default:
-          }
-            
-          }, this);
+    array.push(total);
 
-        total[4] = ((total[2] * 100)/total[1]).toFixed(2) + "%";
-        total[6] = ((total[5] * 100)/total[1]).toFixed(2) + "%";
-      }, this);
+      
   }
 
   function calculateErrorTotal(array){
 
-    var baseLaength = array.length;
+    var total = {
+      count: 0
+    };
 
-    array.push([]);
-    var total = array[array.length -1];
+    array.forEach(function(element, index) {
+      total.count += element.count;
+    }, this);
 
-      array.forEach(function(element, index) {
+    array.push(total);
 
-          if(baseLaength == index) return;
-
-          element.forEach(function(value, i) {
-            if(index == 0){
-              array[array.length -1].push(0);
-            }
-            
-          switch(i) {
-              case 0: 
-                total[i] = "Total";
-              break;
-              case 1:
-              case 2:
-              case 3: 
-              case 5:
-                total[i] += parseFloat(value);
-              break;
-              default:
-          }
-            
-          }, this);
-
-        // total[4] = ((total[2] * 100)/total[1]).toFixed(2) + "%";
-        // total[6] = ((total[5] * 100)/total[1]).toFixed(2) + "%";
-      }, this);
   }
 
   function findAll(completeString, stringName, indexReturn){
