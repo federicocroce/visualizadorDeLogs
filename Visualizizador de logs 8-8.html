@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns:ng="http://angularjs.org" ng-app="myApp" ng-controller="Main">
+
+<head>
+    <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          text-decoration: none;
+        }
+        @import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700');
+        body {
+            margin: 0;
+            font-size: 13px;
+            font-family: 'Roboto Condensed', sans-serif;
+        }
+
+        table{text-align: right; width:100%; border-collapse:collapse;}
+        h1{text-align: center; text-transform: uppercase; background: #072146; color: white; font-size: 1.4em; margin: 0;  padding: 10px;}
+        th{background:#004481; color: white; padding: 5px;}
+        td{color: #072146}
+        td.lastRow{font-weight: bold; background: #525252; color: white; font-size: 1.1em;}
+        span{text-transform: uppercase; font-size: 1em; color: white;}
+        input[type="file"]{width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; position: absolute; z-index: -1; }
+        .input-file{font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white;color: #072146; padding: 10px 20px; border: none; margin-left: 20px;}
+        .input-file:hover{ cursor: pointer; background: #072146; color: white; border: 1px solid white;}
+        input[type="text"]{font-size: 1.1em; height: 25px; background: transparent; color: white; text-transform: uppercase; border: none;border-bottom: 1px solid white; outline: none;}
+        .header{width: 100%; padding: 20px; background: #072146;}
+        .header:hover{outline: none;}
+        .input[type="text"]:focus{outline: none;}
+        .table{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px;}
+        .table:first-child{margin-top: 0;}
+        .all-tables {padding: 15px;}
+    </style>
+</head>
+
+
+
+
+<body >
+  <div class="header">
+      <span> SECCIÓN: </span> <input type="text" ng-model="sectionsName">      
+      <!-- <input type="file" multiple /> -->
+      <input type="file" name="file" id="file" multiple />
+      <label class="input-file" for="file">Seleccione los logs</label>  
+  </div>
+  
+  <div ng-if="allSections.length != 0" class="all-tables">
+
+
+<div class="table">
+  <h1 ng-if="allSections.length != 0" > {{setName(allSections)}}</h1>
+    <table ng-if="allSections.length != 0">
+      <tr>
+        <th>EJECUCIONES</th>
+        <th>EXITOSAS</th>
+        <th>ADVERTENCIAS</th>
+        <th>% EXITOSAS</th>
+        <th>ERRORES</th>
+        <th>% ERRORES</th>
+        <th>FECHA</th>
+      </tr>
+      <tr ng-repeat="section in allSections track by $index">
+        <td ng-repeat="value in section track by $index" ng-if="$index != 0" ng-class="{lastRow: section[0] == 'Total'}">
+            {{value}}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div ng-repeat="services in allServices track by $index" class="table">
+    <h1>{{setName(services)}}</h1>
+    <table>
+      <tr>
+          <th>EJECUCIONES</th>
+          <th>EXITOSAS</th>
+          <th>ADVERTENCIAS</th>
+          <th>% EXITOSAS</th>
+          <th>ERRORES</th>
+          <th>% ERRORES</th>
+          <th>FECHA</th>
+        </tr>
+      <tr ng-repeat="detail in services track by $index">
+        <td ng-repeat="value in detail track by $index" ng-if="$index != 0" ng-class="{lastRow: detail[0] == 'Total'}">
+            {{value}}
+        </td>
+        <td>
+
+        </td>
+      </tr>
+    </table>
+  </div>
+
+
+  <div ng-repeat="services in allErrorsServices track by $index" class="table">
+      <h1>{{services[0][0]}}</h1>
+      <!--<h1>{{setErrorName(services)}}</h1>-->
+      <table>
+        <tr>
+            <th>CODIGO</th>
+            <th>DESCRIPCION</th>
+            <th>CANTIDAD</th>
+            <th>FECHA</th>
+          </tr>
+        <tr ng-repeat="error in services track by $index">
+          <td ng-repeat="value in error track by $index" ng-if="$index != 0" ng-class="{lastRow: detail[0] == 'Total'}">
+              {{value}}
+          </td>
+          <td>
+
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+</body>
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script src="https://code.angularjs.org/1.4.8/i18n/angular-locale_es-ar.js"></script>
+
+<script>
+      var myApp = angular.module('myApp',[]);
+
+    myApp.controller('Main', ['$scope', function($scope) {
+
+      $scope.allSections = [];
+      allSections = [];
+      var transactionsNames = [];
+      allErrorsServices = [];
+      var allErrors = [];
+      allServices = [];
+      var firstEntry = false;
+      var curString = "======================================================================================================================================";
+      var cantFiles = 0;
+      var stringToFindErrors = "";
+      // new allServices(1000000);
+      // allServices = [
+      //   services = []
+      // ];
+      $scope.sectionsName = "plazofijo";
+      // $scope.serviceName = "TRX I394";
+
+      document.querySelector("input[type=file]").addEventListener("change", function(event) {
+          var files = event.target.files;
+          cantFiles = event.target.files.length;
+          stringToFindErrors = "";
+          firstEntry = true;
+          allSections = [];
+          allServices = [];
+          allErrorsServices = [];
+          allErrors = [];
+          transactionsNames = [];
+          for (var i = 0; i < files.length; i++) {
+            (function(file) {
+              var reader = new FileReader();
+              reader.fileName = file.name
+              reader.onload = function(e, file) {
+                setFila(e.target);
+              };
+              reader.readAsText(file)
+            }(files[i]))
+          }
+        })
+
+
+function setFila (target){
+    var indexBegin = 0;
+    var indexEnd = 0;
+
+    
+
+    var fileName = target.fileName.replace('resumen-completo-','').replace('.log','');
+
+    // var cutString = target.result.indexOf("prestamo");
+
+    // var stringName = "plazofijo";
+
+    // var regexp = new RegExp(stringName,"g");
+    
+
+    // while (match = regexp.exec(target.result)) {
+    //   matches.push(match.index);
+    // }
+
+    // indexBegin = findAll(target.result, "plazofijo", 1);
+
+    var firstSlice = target.result.slice(findAll(target.result, $scope.sectionsName, 1));
+
+    stringToFindErrors = firstSlice.slice(firstSlice.indexOf("D E T A L L E    D E    E R R O R E S" ), firstSlice.indexOf("D E T A L L E       D E      A D V E R T E N C I A S"));
+
+    // indexEnd = findAll(firstSlice, curString, 0);
+
+    // var secondSlice = firstSlice.slice(0, indexEnd);
+
+    var sectionContent = firstSlice.slice(0, findAll(firstSlice, curString, 0)).split('#');
+
+    var servicesContent = firstSlice.slice(findAll(firstSlice, curString, 0), findAll(firstSlice, curString, 1)).split('#');
+
+    
+    // servicesContent[12].split("%")[1].trim();
+
+    // var transactionsNames = ["TRX I394", "TRX CU58"];
+    if(allServices.length == 0){
+      
+      servicesContent.forEach(function(element, index) {
+        if(multiple(index, 6)) { 
+          if(index == 0){
+            transactionsNames.push(servicesContent[index].replace(curString, "").trim());
+          }
+          else{
+            transactionsNames.push(servicesContent[index].split("%")[1].trim());
+          }          
+        }
+        }, this);
+
+        transactionsNames = transactionsNames.splice(0, transactionsNames.length -1);
+
+      transactionsNames.forEach(function(element, index) {
+        allServices.push([]);
+        }, this);
+    }
+
+    
+
+    transactionsNames.forEach(function(element, index) {      
+      var services = firstSlice.slice(firstSlice.indexOf(element)).slice(0, findAll(firstSlice, "%", 1)).split('#');
+      console.log(services[0].trim());
+      firstEntry = true;
+      setErrors(services, firstSlice, fileName);
+      //////////////////////////////////////  seteo de  errores
+      services.push(fileName);
+      allServices[index].push(services);
+    }, this);
+
+
+    sectionContent.push(fileName);
+
+    allSections.push(sectionContent);
+
+    $scope.$apply(function() {
+        $scope.allSections = allSections;
+        $scope.allServices = allServices;
+
+        // allErrorsServices.splice(0,1);
+        
+
+        sorByDate ($scope.allSections, 7);
+
+        $scope.allServices.forEach(function(element, index) {
+          sorByDate (element, 7);
+        }, this);
+
+        if(cantFiles == $scope.allSections.length){
+          calculateTotal($scope.allSections);
+          
+          $scope.allServices.forEach(function(element, index) {
+           calculateTotal(element);          
+         }, this);
+
+
+         setErrorsServices();
+
+         $scope.allErrorsServices = allErrorsServices;
+
+         $scope.allErrorsServices.forEach(function(element, index) {
+          sorByDate (element, 4);
+        }, this);
+
+        //  console.log(allErrors);
+
+         
+
+         $scope.allErrorsServices.forEach(function(element, index) {
+           calculateErrorTotal(element);          
+         }, this);
+        }        
+    });
+  }
+
+  function setErrorsServices (){
+    transactionsNames.forEach(function(name, indexName) {  
+      allErrorsServices.push([]);    
+      allErrors.forEach(function(error) {
+        if(error[0].trim() == name)     
+        allErrorsServices[indexName].push(error);
+      }, this);
+    }, this);
+  }
+
+  function setErrors(services, firstSlice, fileName){ 
+
+    var allIndexBegin = findAll(stringToFindErrors, services[0].trim()); // obtengo todos los match en donde aparezca el servicio.
+    var error = null;
+
+
+    allIndexBegin.forEach(function(element) { // Obtengo los index de los lugares en donde aparece la transaccion
+      error = stringToFindErrors.slice(element, element + 150).split('#');  // Obtengo la linea del error
+      error.push(fileName);  // Obtengo la linea del error
+      allErrors.push(error);
+    }, this);
+
+
+
+
+
+
+
+
+
+   
+    // // var allIndexBegin = findAll(stringToFindErrors, services[0].trim()); // obtengo todos los match en donde aparezca el servicio.
+    // // var error = null;
+    // var indexError = null;
+
+    //   // if(allErrorsServices.length == 0){ // si es la primera vez que va a recorrer el arreglo de todos los errores de los servicios hago un push de un array vacio
+    //   //   allErrorsServices.push([]);
+    //   //   // var firstEntry = true;
+    //   // }
+    
+    // allIndexBegin.forEach(function(element) { // Obtengo los index de los lugares en donde aparece la transaccion
+    //   error = stringToFindErrors.slice(element, element + 150).split('#');  // Obtengo la linea del error
+    //   error.push(fileName);  // Obtengo la linea del error
+
+    //   // firstEntry = false;
+
+    //   if(allErrorsServices.length > 0) {  
+    //   allErrorsServices.forEach(function(serv, index) { // recorro el arreglo de todos los errores de los servicios
+
+    //     // if(allErrorsServices[0].length == 0){ // si es la primera vez que va a recorrer el arreglo de los errores hago un push del error
+    //     // firstEntry = true;
+    //     //   serv.push(error);
+    //     //   return;
+    //     // };
+    //     // if(indexError == 0 ){ 
+    //     //   indexError = "";
+    //     //   return;
+    //     // }
+    //     if(serv[0] != undefined){ 
+    //       indexError = serv[0][0].trim().indexOf(services[0].trim()) == 0 ? index : "-1"; // Pregunto si el nombre del servicio ya existe en el array de errores
+    //       console.log(serv[0][0].trim() +"  "+ services[0].trim())
+    //       if(indexError != undefined && indexError != "-1" ) return;
+    //     }
+
+    //   }, this);
+    // }
+
+          
+
+    //   // if(firstEntry) return;
+
+    //   // if(indexError == undefined || indexError == "") return;
+    //   if(indexError != undefined && indexError != "-1"){ // Si existe y no es la primera vez que entra
+    //     // if(firstEntry) firstEntry = false;
+    //     allErrorsServices[indexError].push(error);
+    //   }
+    //   else{
+    //     // if(firstEntry){ 
+    //     //    firstEntry = false;
+    //     //    return;
+    //     // }
+    //     var newError = []
+    //     newError.push(error);
+    //     allErrorsServices.push(newError);
+    //   }     
+
+    // }, this);
+
+    // // var indexError = null;
+  }
+
+  $scope.setName = function(array){
+    var endDate = array[array.length -2][7] =! undefined ? array[array.length -2][7] : null;
+    return array[0][0] + "  " + array[array.length -1][4] + "  " + array[0][7] + " / " + endDate;
+  }
+
+  $scope.setErrorName = function(array){
+    return array[0][0] + "  " + array[array.length -1][3] + "  " + array[0][4] + " / " + array[array.length -2][7];
+  }
+
+  function calculateTotal(array){
+
+    var baseLaength = array.length;
+
+    array.push([]);
+    var total = array[array.length -1];
+
+      array.forEach(function(element, index) {
+
+          if(baseLaength == index) return;
+
+          element.forEach(function(value, i) {
+            if(index == 0){
+              array[array.length -1].push(0);
+            }
+            
+           switch(i) {
+              case 0: 
+                total[i] = "Total";
+              break;
+              case 1:
+              case 2:
+              case 3: 
+              case 5:
+                total[i] += parseFloat(value);
+              break;
+              default:
+          }
+            
+          }, this);
+
+        total[4] = ((total[2] * 100)/total[1]).toFixed(2) + "%";
+        total[6] = ((total[5] * 100)/total[1]).toFixed(2) + "%";
+      }, this);
+  }
+
+  function calculateErrorTotal(array){
+
+    var baseLaength = array.length;
+
+    array.push([]);
+    var total = array[array.length -1];
+
+      array.forEach(function(element, index) {
+
+          if(baseLaength == index) return;
+
+          element.forEach(function(value, i) {
+            if(index == 0){
+              array[array.length -1].push(0);
+            }
+            
+          switch(i) {
+              case 0: 
+                total[i] = "Total";
+              break;
+              case 1:
+              case 2:
+              case 3: 
+              case 5:
+                total[i] += parseFloat(value);
+              break;
+              default:
+          }
+            
+          }, this);
+
+        // total[4] = ((total[2] * 100)/total[1]).toFixed(2) + "%";
+        // total[6] = ((total[5] * 100)/total[1]).toFixed(2) + "%";
+      }, this);
+  }
+
+  function findAll(completeString, stringName, indexReturn){
+    var match, matches = [];
+    var regexp = new RegExp(stringName,"g");
+
+    while (match = regexp.exec(completeString)) {
+      matches.push(match.index);
+    }
+    if(indexReturn == undefined){
+      return matches;
+    }
+    else{
+      return matches[indexReturn];
+    }
+    // if(indexReturn){
+      // return matches[indexReturn];
+    // }
+    // else if(indexReturn == undefined){
+    //   return matches;
+    // }  
+  }
+
+  function sorByDate (array, indexToCompare) {
+    for(var i=1;i<array.length;i++)
+      {
+          for(var j=0;j<(array.length-i);j++)
+          {
+              if(array[j][indexToCompare] > array[j+1][indexToCompare])
+              {
+                  k=array[j+1];
+                  array[j+1] = array[j];
+                  array[j]=k;
+              }
+          }
+      }
+  }
+
+  function multiple(valor, multiple)
+    {
+        resto = valor % multiple;
+        if(resto==0)
+            return true;
+        else
+            return false;
+    }
+
+    }]);
+</script>
+
+</html>
