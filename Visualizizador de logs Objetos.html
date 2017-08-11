@@ -28,7 +28,8 @@
         span{text-transform: uppercase; font-size: 1em; color: white;}
         input[type="file"]{width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; position: absolute; z-index: -1; }
         .input-file{font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white;color: #072146; padding: 10px 20px; border: none; margin-left: 20px;}
-        .input-file:hover{ cursor: pointer; background: #072146; color: white; border: 1px solid white;}
+        .input-file:hover{ cursor: pointer; background: #004481; color: white; border: 1px solid white;}
+        .input-file:active{background: #072146;}
         input[type="text"]{font-size: 1.1em; height: 25px; background: transparent; color: white; text-transform: uppercase; border: none;border-bottom: 1px solid white; outline: none;}
         .header{width: 100%; padding: 20px; background: #072146;}
         .header:hover{outline: none;}
@@ -38,21 +39,9 @@
         .all-tables {padding: 1px 15px 15px 15px;}
         .switch{width: 100%; padding: 5px; background: #072146;}
         button{ display: inline-block;font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white; color: #072146; padding: 10px 20px; border: 1px solid #072146; width: 50%;}
-        button:hover{cursor: pointer; background: #072146; color: white; border: 1px solid white;}
-        button:active{cursor: pointer; background: #072146; color: white; border: 1px solid white;}
+        button:hover{cursor: pointer; background: #004481; color: white; border: 1px solid white;}
+        .button-focus, button:focus{cursor: pointer; background: #072146; color: white; border: 1px solid white;}
         button:nth-child(2){margin-right: -4px; }
-
-
-        .b {
-border: 5px solid red;
-padding: 10px;
-margin: 0px;
-width: 50%;
-display: inline-block;
--webkit-box-sizing: border-box;
--moz-box-sizing: border-box;
-box-sizing: border-box;   
-}
     </style>
 </head>
 
@@ -66,14 +55,14 @@ box-sizing: border-box;
       <input type="file" name="file" id="file" multiple />
       <label class="input-file" for="file">Seleccione los logs</label>  
   </div>
-  
-  <div ng-if="allSections.length != 0" class="all-tables">
+ 
+  <div ng-show="allSections.length != 0" class="all-tables">
 
     <div class="switch">
-      <button  ng-click="view = 'services'">Servicios</button>
-      <button ng-click="view = 'errors'">Errores</button>
-      
+      <button ng-class="{'button-focus': view == 'services'}" ng-click="view = 'services'">Servicios </button>      
+      <button ng-click="view = 'errors'">Errores</button>      
     </div>
+    
 
 <div class="table first-child">
   <div class="title-container">
@@ -127,7 +116,7 @@ box-sizing: border-box;
   </div>
 
 
-  <div ng-repeat="services in allErrorsServices track by $index" class="table" ng-if="view == 'errors'">
+  <div ng-repeat="services in allErrorsServices track by $index" class="table" ng-if="view == 'errors' && services.length > 0">
       <div class="title-container">
           <h1 ng-if="allSections.length != 0" > {{services[0].service}}</h1>
         </div>
@@ -170,23 +159,19 @@ box-sizing: border-box;
       allErrorsServices = [];
       var allErrors = [];
       allServices = [];
-      var firstEntry = false;
       var curString = "======================================================================================================================================";
       var cantFiles = 0;
       var stringToFindErrors = "";
+
       $scope.view = "services";
-      // new allServices(1000000);
-      // allServices = [
-      //   services = []
-      // ];
-      $scope.sectionsName = "plazofijo";
-      // $scope.serviceName = "TRX I394";
+
+      $scope.sectionsName = "tarjetas";
+      
 
       document.querySelector("input[type=file]").addEventListener("change", function(event) {
           var files = event.target.files;
           cantFiles = event.target.files.length;
           stringToFindErrors = "";
-          firstEntry = true;
           allSections = [];
           allServices = [];
           allErrorsServices = [];
@@ -222,56 +207,57 @@ function setFila (target){
 
     
 
-    var fileName = target.fileName.replace('resumen-completo-','').replace('.log','');
+    var fileName = target.fileName.replace('resumen-completo-','').replace('.log',''); // Obtengo el nombre del archivo (Fecha)
 
-    var firstSlice = target.result.slice(findAll(target.result, $scope.sectionsName, 1));
+    var firstSlice = target.result.slice(findAll(target.result, $scope.sectionsName, 1)); 
 
-    stringToFindErrors = firstSlice.slice(firstSlice.indexOf("D E T A L L E    D E    E R R O R E S" ), firstSlice.indexOf("D E T A L L E       D E      A D V E R T E N C I A S"));
+    stringToFindErrors = firstSlice.slice(firstSlice.indexOf("D E T A L L E    D E    E R R O R E S" ), firstSlice.indexOf("D E T A L L E       D E      A D V E R T E N C I A S")); // Obtengo todo el string de lso errores.
 
+    ////////// Seccion 
     var sectionContent = formatSectionServiceObject(firstSlice.slice(0, findAll(firstSlice, curString, 0)).split('#')); // Seccion
     sectionContent.date  = fileName;
+    ////////////////////
 
+    /// Obtengo el contenido de todos los servicios y sus totales de esa seccion
     var servicesContent = firstSlice.slice(findAll(firstSlice, curString, 0), findAll(firstSlice, curString, 1)).split('#');
 
-    if(allServices.length == 0){
-      
+
+    if(allServices.length == 0){      
       servicesContent.forEach(function(element, index) {
-        if(multiple(index, 6)) { 
-          if(index == 0){
-            transactionsNames.push(servicesContent[index].replace(curString, "").trim());
+        if(multiple(index, 6)) {  //Si es multiplo de 6 significa que es una linea
+          if(index == 0){ // si es igual a 0 es el nombre del servicio mas los ====== sepradores
+            transactionsNames.push(servicesContent[index].replace(curString, "").trim()); // Elimino los ====== sepradores y solo obtengo el nombre del servicio.
           }
-          else{
-            transactionsNames.push(servicesContent[index].split("%")[1].trim());
+          else{ 
+            transactionsNames.push(servicesContent[index].split("%")[1].trim());// Elimino los % sepradores y solo obtengo el nombre del servicio.
           }          
         }
         }, this);
-
+        // 
         transactionsNames = transactionsNames.splice(0, transactionsNames.length -1);
-
+      
+      // Hago un push en todos los servicios por cada nombre de servicio
       transactionsNames.forEach(function(element, index) {
         allServices.push([]);
-        }, this);
+       }, this);
     }
 
     
-
-    transactionsNames.forEach(function(element, index) {      
-      var services = formatSectionServiceObject(firstSlice.slice(firstSlice.indexOf(element)).slice(0, findAll(firstSlice, "%", 1)).split
-      ('#'));
+    //  Por cada nombre de servicio voy obteniendo todos los servicios y los pusheo en todos los servicios 
+    transactionsNames.forEach(function(element, index) {  
+      serviceArray = firstSlice.slice(firstSlice.indexOf(element)).slice(0, findAll(firstSlice, "%", 1)).split('#');
+      if(serviceArray.length < 6) return; 
+      var services = formatSectionServiceObject(serviceArray);
       services.date = fileName;
-      // console.log(services[0].trim());
-      firstEntry = true;
 
+      //// Seteo de  errores todos los errores en un mismo array
       setErrors(services, firstSlice, fileName);
-      //////////////////////////////////////  seteo de  errores
+      
       
       allServices[index].push(services);
     }, this);
 
-
-    
-    // console.log(sectionContent);
-
+    // Pusheo en la tabla de todas las secciones la seccion ya formateada con fecha y convertida a objeto.
     allSections.push(sectionContent);
 
     $scope.$apply(function() {
@@ -281,10 +267,10 @@ function setFila (target){
         // allErrorsServices.splice(0,1);
         
 
-        sorByDate ($scope.allSections, 7);
+        sorByDate ($scope.allSections);
 
         $scope.allServices.forEach(function(element, index) {
-          sorByDate (element, 7);
+          sorByDate (element);
         }, this);
 
         // console.log($scope.allSections);
@@ -450,12 +436,12 @@ function setFila (target){
     }
   }
 
-  function sorByDate (array, indexToCompare) {
+  function sorByDate (array) {
     for(var i=1;i<array.length;i++)
       {
           for(var j=0;j<(array.length-i);j++)
           {
-              if(array[j][indexToCompare] > array[j+1][indexToCompare])
+              if(array[j].date > array[j+1].date)
               {
                   k=array[j+1];
                   array[j+1] = array[j];
