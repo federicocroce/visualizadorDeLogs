@@ -18,7 +18,10 @@
         }
 
         table{text-align: right; width:100%; border-collapse:collapse;}
-        h1{text-align: center; text-transform: uppercase; background: #072146; color: white; font-size: 1.4em; margin: 0;  padding: 10px;}
+        .title-container {background: #072146; text-align: center; padding: 10px; width: 100%;}
+        h1{text-transform: uppercase; background: #072146; color: white; font-size: 1.4em; margin: 0;  display: inline-block;}
+        h1.float-right{float: right;}
+        h1.float-left{float: left;}
         th{background:#004481; color: white; padding: 5px;}
         td{color: #072146}
         td.lastRow{font-weight: bold; background: #525252; color: white; font-size: 1.1em;}
@@ -31,8 +34,24 @@
         .header:hover{outline: none;}
         .input[type="text"]:focus{outline: none;}
         .table{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px;}
-        .table:first-child{margin-top: 0;}
-        .all-tables {padding: 15px;}
+        .table.first-child{margin-top: 1px;}
+        .all-tables {padding: 1px 15px 15px 15px;}
+        .switch{width: 100%; padding: 5px; background: #072146;}
+        button{ display: inline-block;font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white; color: #072146; padding: 10px 20px; border: 1px solid #072146; width: 50%;}
+        button:hover{cursor: pointer; background: #072146; color: white; border: 1px solid white;}
+        button:nth-child(2){margin-right: -4px; }
+
+
+        .b {
+border: 5px solid red;
+padding: 10px;
+margin: 0px;
+width: 50%;
+display: inline-block;
+-webkit-box-sizing: border-box;
+-moz-box-sizing: border-box;
+box-sizing: border-box;   
+}
     </style>
 </head>
 
@@ -49,9 +68,18 @@
   
   <div ng-if="allSections.length != 0" class="all-tables">
 
+    <div class="switch">
+      <button  ng-click="view = 'services'">Servicios</button>
+      <button ng-click="view = 'errors'">Errores</button>
+      
+    </div>
 
-<div class="table">
-  <h1 ng-if="allSections.length != 0" > {{setName(allSections)}}</h1>
+<div class="table first-child">
+  <div class="title-container">
+    <h1 ng-if="allSections.length != 0" class="float-left"> {{allSections[allSections.length -1].successfulPercent}}</h1>    
+    <h1 ng-if="allSections.length != 0" > {{allSections[0].name}}</h1>
+    <h1 ng-if="allSections.length != 0" class="float-right"> {{setDate(allSections)}}</h1>    
+  </div>
     <table ng-if="allSections.length != 0">
       <tr>
         <th>EJECUCIONES</th>
@@ -70,8 +98,12 @@
     </table>
   </div>
 
-  <div ng-repeat="services in allServices track by $index" class="table">
-    <h1>{{setName(services)}}</h1>
+  <div ng-repeat="services in allServices track by $index" class="table" ng-if="view == 'services'">
+      <div class="title-container">
+          <h1 ng-if="allSections.length != 0" class="float-left"> {{services[services.length -1].successfulPercent}}</h1>    
+          <h1 ng-if="services.length != 0" > {{services[0].name}}</h1>
+          <h1 ng-if="services.length != 0" class="float-right"> {{setDate(services)}}</h1>    
+        </div>
     <table>
       <tr>
           <th>EJECUCIONES</th>
@@ -94,15 +126,16 @@
   </div>
 
 
-  <div ng-repeat="services in allErrorsServices track by $index" class="table">
-      <h1>{{services[0].service}}</h1>
+  <div ng-repeat="services in allErrorsServices track by $index" class="table" ng-if="view == 'errors'">
+      <div class="title-container">
+          <h1 ng-if="allSections.length != 0" > {{services[0].service}}</h1>
+        </div>
       <!--<h1>{{setErrorName(services)}}</h1>-->
       <table>
         <tr>
             <th>CODIGO</th>
             <th>DESCRIPCION</th>
             <th>CANTIDAD</th>
-            <th>FECHA</th>
           </tr>
         <tr ng-repeat="error in services track by $index">
           <td ng-repeat="value in error track by $index" ng-if="$index != 0" ng-class="{lastRow: detail[0] == 'Total'}">
@@ -140,6 +173,7 @@
       var curString = "======================================================================================================================================";
       var cantFiles = 0;
       var stringToFindErrors = "";
+      $scope.view = "services";
       // new allServices(1000000);
       // allServices = [
       //   services = []
@@ -170,6 +204,16 @@
           }
         })
 
+        Array.prototype.contains = function(obj, value) {
+          var i = this.length;
+          while (i--) {
+              if (this[i][value] === obj) {
+                  return i;
+              }
+          }
+          return -1;
+        }
+
 
 function setFila (target){
     var indexBegin = 0;
@@ -179,36 +223,15 @@ function setFila (target){
 
     var fileName = target.fileName.replace('resumen-completo-','').replace('.log','');
 
-    // var cutString = target.result.indexOf("prestamo");
-
-    // var stringName = "plazofijo";
-
-    // var regexp = new RegExp(stringName,"g");
-    
-
-    // while (match = regexp.exec(target.result)) {
-    //   matches.push(match.index);
-    // }
-
-    // indexBegin = findAll(target.result, "plazofijo", 1);
-
     var firstSlice = target.result.slice(findAll(target.result, $scope.sectionsName, 1));
 
     stringToFindErrors = firstSlice.slice(firstSlice.indexOf("D E T A L L E    D E    E R R O R E S" ), firstSlice.indexOf("D E T A L L E       D E      A D V E R T E N C I A S"));
-
-    // indexEnd = findAll(firstSlice, curString, 0);
-
-    // var secondSlice = firstSlice.slice(0, indexEnd);
 
     var sectionContent = formatSectionServiceObject(firstSlice.slice(0, findAll(firstSlice, curString, 0)).split('#')); // Seccion
     sectionContent.date  = fileName;
 
     var servicesContent = firstSlice.slice(findAll(firstSlice, curString, 0), findAll(firstSlice, curString, 1)).split('#');
 
-    
-    // servicesContent[12].split("%")[1].trim();
-
-    // var transactionsNames = ["TRX I394", "TRX CU58"];
     if(allServices.length == 0){
       
       servicesContent.forEach(function(element, index) {
@@ -280,18 +303,20 @@ function setFila (target){
         //   sorByDate (element, 4);
         // }, this);
 
-         console.log(allErrorsDescriptions);
+        //  console.log(allErrorsDescriptions);
 
          
 
          $scope.allErrorsServices.forEach(function(element, index) {
-           calculateErrorTotal(element);          
+          element.sort(function(a, b){ return b.count - a.count; });
+          //  calculateErrorTotal(element);          
          }, this);
         }        
     });
   }
 
   function formatSectionServiceObject (array){
+    console.log(array);
     return {
       name: array[0].trim(),
       executed: parseFloat(array[1].trim()),
@@ -315,25 +340,28 @@ function setFila (target){
   function setErrorsServices (){
     transactionsNames.forEach(function(name, indexName) {  
       allErrorsServices.push([]); 
-      var desc = [];   
+      var description = [];   
       allErrorsDescriptions.push([]);    
       allErrors.forEach(function(error) {
         if(error.service == name){  
           allErrorsServices[indexName].push(error);
 
-          if(desc.length == 0){
-            desc.push({desc:error.description, serv:error.service, name: name, new: true});
-            allErrorsDescriptions[indexName].push({desc:error.description, serv:error.service, name: name, new: true});
+          if(description.length == 0){
+            description.push(error);
+            allErrorsDescriptions[indexName].push(error);
           } 
           else{ 
-            allErrorsDescriptions[indexName].forEach(function(description) {
-              if(description.desc != error.description)
-              desc.push({desc:error.description, serv:error.service, name: name, new: false});
-            }, this);
+            var matchIndex = description.contains(error.description, "description");
+            if(matchIndex == -1){
+              description.push(error);
+            }
+            else{
+              description[matchIndex].count += error.count;
+            } 
           }
         }
       }, this);
-      allErrorsDescriptions[indexName] = desc;
+      allErrorsServices[indexName] = description;
     }, this);
   }
 
@@ -345,15 +373,15 @@ function setFila (target){
 
     allIndexBegin.forEach(function(element) { // Obtengo los index de los lugares en donde aparece la transaccion
       error = formatErrorObject(stringToFindErrors.slice(element, element + 150).split('#'));  // Obtengo la linea del error
-      error.date = fileName;  // Obtengo la linea del error
+      // error.date = fileName;  // Obtengo la linea del error
       allErrors.push(error);
     }, this);
 
   }
 
-  $scope.setName = function(array){
-    var endDate = array[array.length -2].date =! undefined ? array[array.length -2].date : null;
-    return array[0].name + "  " + array[array.length -1].successfulPercent + "  " + array[0].date + " / " + endDate;
+  $scope.setDate = function(array){
+    var endDate = array.length > 2 ? " / " + array[array.length -2].date : "";
+    return array[0].date + endDate;
   }
 
   $scope.setErrorName = function(array){
@@ -381,6 +409,7 @@ function setFila (target){
       total.successful += element.successful;
       total.warning += element.warning;
       total.errors += element.errors;
+      total.date = "";
     }, this);
 
     total.successfulPercent = (((total.successful +  total.warning)* 100)/total.executed).toFixed(2) + "%";
@@ -418,12 +447,6 @@ function setFila (target){
     else{
       return matches[indexReturn];
     }
-    // if(indexReturn){
-      // return matches[indexReturn];
-    // }
-    // else if(indexReturn == undefined){
-    //   return matches;
-    // }  
   }
 
   function sorByDate (array, indexToCompare) {
