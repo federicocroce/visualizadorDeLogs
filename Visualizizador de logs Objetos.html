@@ -28,8 +28,13 @@
         span{text-transform: uppercase; font-size: 1em; color: white;}
         input[type="file"]{width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; position: absolute; z-index: -1; }
         .input-file{font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white;color: #072146; padding: 10px 20px; border: none; margin-left: 20px;}
+        .content-openned{background: white; position: absolute; overflow: scroll; width: 100%; height: 180px;}
+        .content-openned p{color: #072146; padding: 10px; text-transform: uppercase;}
+        .content-openned p:hover{color: white; cursor: pointer; background: #004481;}
+        .select-input{display: inline-block; position: relative;}
         .input-file:hover{ cursor: pointer; background: #004481; color: white; border: 1px solid white;}
         .input-file:active{background: #072146;}
+        input[placeholder]{color: #9f9f9f;}
         input[type="text"]{font-size: 1.1em; height: 25px; background: transparent; color: white; text-transform: uppercase; border: none;border-bottom: 1px solid white; outline: none;}
         .header{width: 100%; padding: 20px; background: #072146;}
         .header:hover{outline: none;}
@@ -42,6 +47,9 @@
         button:hover{cursor: pointer; background: #004481; color: white; border: 1px solid white;}
         .button-focus, button:focus{cursor: pointer; background: #072146; color: white; border: 1px solid white;}
         button:nth-child(2){margin-right: -4px; }
+        ::-webkit-scrollbar{width: 7px; background: transparent; height: 0}
+        ::-webkit-scrollbar-track{background: transparent;}
+        ::-webkit-scrollbar-thumb{background: #525252; border-radius: 10px}
     </style>
 </head>
 
@@ -50,10 +58,22 @@
 
 <body >
   <div class="header">
-      <span> SECCIÓN: </span> <input type="text" ng-model="sectionsName">      
+      
+      <span> SECCIÓN: </span>
+      <div class="select-input">
+        <input type="text" ng-model="sectionsName" ng-click='isOpen = !isOpen' ng-change="init()" placeholder="Indique la seccion">      
       <!-- <input type="file" multiple /> -->
-      <input type="file" name="file" id="file" multiple />
-      <label class="input-file" for="file">Seleccione los logs</label>  
+        <div class="content-openned" ng-show="isOpen && allSectionsNames.length != 0" >
+            <p ng-repeat="value in allSectionsNames track by $index" ng-if="$index != 0" ng-click="contentToogle(value)">
+                {{value}}
+            </p>
+          </div>
+      </div>
+
+      <div style="display: inline-block;">
+          <input type="file" name="file" id="file" multiple/>
+          <label class="input-file" for="file">{{inputLabel}}</label>
+      </div>    
   </div>
  
   <div ng-show="allSections.length != 0" class="all-tables">
@@ -137,6 +157,11 @@
         </tr>
       </table>
     </div>
+
+    <div class="chart-container">
+      <div id="container-referred" style="min-width: 310px; max-width: 800px; height: 400px; margin: 0 auto">></div>
+    </div>
+
   </div>
 </div>
 
@@ -147,37 +172,70 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
 <script src="https://code.angularjs.org/1.4.8/i18n/angular-locale_es-ar.js"></script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/highcharts-more.js"></script>
 
 <script>
       var myApp = angular.module('myApp',[]);
 
     myApp.controller('Main', ['$scope', function($scope) {
-
+      var countFileSelected = 0;
       $scope.allSections = [];
       allSections = [];
       var transactionsNames = [];
       allErrorsServices = [];
+      var allErrorsDescriptions = [];
       var allErrors = [];
       allServices = [];
+      $scope.allSectionsNames = [];
       var curString = "======================================================================================================================================";
       var cantFiles = 0;
       var stringToFindErrors = "";
+      $scope.inputLabel = "Seleccione las secciones";
 
       $scope.view = "services";
 
-      $scope.sectionsName = "tarjetas";
+      $scope.sectionsName = "plazofijo";
+      $scope.isOpen = false;
+      $scope.multipleInput = false;
+
+      $scope.init = function(){
+        countFileSelected = 0;
+        $scope.allSections = [];
+        allSections = [];
+        transactionsNames = [];
+        allErrorsServices = [];
+        allErrorsDescriptions = [];
+        allErrors = [];
+        allServices = [];
+        curString = "======================================================================================================================================";
+        cantFiles = 0;
+        stringToFindErrors = "";
+
+        $scope.view = "services";
+        $scope.isOpen = false;
+
+        if($scope.sectionsName != ""){
+          $scope.inputLabel = "Seleccione los logs";
+        }
+        else{
+          $scope.inputLabel = "Seleccione las secciones";
+        }
+      }
+
+      
+
+      $scope.contentToogle = function(value){
+        $scope.sectionsName = value;
+        $scope.isOpen = false;
+        $scope.init();
+      }
       
 
       document.querySelector("input[type=file]").addEventListener("change", function(event) {
+        $scope.init();
           var files = event.target.files;
           cantFiles = event.target.files.length;
-          stringToFindErrors = "";
-          allSections = [];
-          allServices = [];
-          allErrorsServices = [];
-          allErrorsDescriptions = [];
-          allErrors = [];
-          transactionsNames = [];
           for (var i = 0; i < files.length; i++) {
             (function(file) {
               var reader = new FileReader();
@@ -202,16 +260,37 @@
 
 
 function setFila (target){
-    var indexBegin = 0;
-    var indexEnd = 0;
 
-    
+    if($scope.allSectionsNames.length == 0){
+
+      var contetSectionsNames = target.result.slice(findAll(target.result, curString, 3), findAll(target.result, curString, 4)).split('#');
+
+      contetSectionsNames.forEach(function(element, index) {
+        if(multiple(index, 6)) {  //Si es multiplo de 6 significa que es una linea
+          if(index == 0){ // si es igual a 0 es el nombre del servicio mas los ====== sepradores
+            $scope.allSectionsNames.push(contetSectionsNames[index].replace(curString, "").trim()); // Elimino los ====== sepradores y solo obtengo el nombre del servicio.
+          }
+          else{ 
+            $scope.allSectionsNames.push(contetSectionsNames[index].split("%")[1].trim());// Elimino los % sepradores y solo obtengo el nombre del servicio.
+          }          
+        }
+      }, this);
+      $scope.allSectionsNames = $scope.allSectionsNames.splice(0, $scope.allSectionsNames.length -1);
+      $scope.$apply(function() {
+        $scope.inputLabel = "Seleccione los logs";
+        $scope.multipleInput = true;
+      });
+      if($scope.sectionsName == "")  return;
+    }
+
 
     var fileName = target.fileName.replace('resumen-completo-','').replace('.log',''); // Obtengo el nombre del archivo (Fecha)
 
+    
+
     var firstSlice = target.result.slice(findAll(target.result, $scope.sectionsName, 1)); 
 
-    stringToFindErrors = firstSlice.slice(firstSlice.indexOf("D E T A L L E    D E    E R R O R E S" ), firstSlice.indexOf("D E T A L L E       D E      A D V E R T E N C I A S")); // Obtengo todo el string de lso errores.
+    stringToFindErrors = firstSlice.slice(firstSlice.indexOf("D E T A L L E    D E    E R R O R E S" ), firstSlice.indexOf("D E T A L L E       D E      A D V E R T E N C I A S")); // Obtengo todo el string de los errores.
 
     ////////// Seccion 
     var sectionContent = formatSectionServiceObject(firstSlice.slice(0, findAll(firstSlice, curString, 0)).split('#')); // Seccion
@@ -222,7 +301,8 @@ function setFila (target){
     var servicesContent = firstSlice.slice(findAll(firstSlice, curString, 0), findAll(firstSlice, curString, 1)).split('#');
 
 
-    if(allServices.length == 0){      
+    if(allServices.length == 0){      // solo se ejecuta la primera vez
+
       servicesContent.forEach(function(element, index) {
         if(multiple(index, 6)) {  //Si es multiplo de 6 significa que es una linea
           if(index == 0){ // si es igual a 0 es el nombre del servicio mas los ====== sepradores
@@ -231,10 +311,12 @@ function setFila (target){
           else{ 
             transactionsNames.push(servicesContent[index].split("%")[1].trim());// Elimino los % sepradores y solo obtengo el nombre del servicio.
           }          
-        }
-        }, this);
+      }
+    }, this);
+
         // 
         transactionsNames = transactionsNames.splice(0, transactionsNames.length -1);
+        
       
       // Hago un push en todos los servicios por cada nombre de servicio
       transactionsNames.forEach(function(element, index) {
@@ -259,8 +341,9 @@ function setFila (target){
 
     // Pusheo en la tabla de todas las secciones la seccion ya formateada con fecha y convertida a objeto.
     allSections.push(sectionContent);
-
+    countFileSelected +=1;
     $scope.$apply(function() {
+      if(cantFiles == countFileSelected){
         $scope.allSections = allSections;
         $scope.allServices = allServices;
 
@@ -275,7 +358,7 @@ function setFila (target){
 
         // console.log($scope.allSections);
 
-        if(cantFiles == $scope.allSections.length){
+        
           calculateTotal($scope.allSections);
           
           $scope.allServices.forEach(function(element, index) {
@@ -298,12 +381,15 @@ function setFila (target){
           element.sort(function(a, b){ return b.count - a.count; });
           //  calculateErrorTotal(element);          
          }, this);
+
+
+         setChart ($scope.allSections);
         }        
     });
   }
 
   function formatSectionServiceObject (array){
-    console.log(array);
+    // console.log(array);
     return {
       name: array[0].trim(),
       executed: parseFloat(array[1].trim()),
@@ -459,8 +545,91 @@ function setFila (target){
         else
             return false;
     }
-
     }]);
+
+function setChart (array){ 
+  var sectionDisponibility = [];
+  var sectionErrorsPercent = [];
+  var categories = [];
+  var title = array[array.length-2].name + " "+ array[array.length-1].successfulPercent;
+  // var totalPercent = [];
+
+  array.forEach(function(element, index) {
+    if(array.length -1 == index) return;
+    sectionDisponibility.push(parseFloat(element.successfulPercent.trim()));
+    sectionErrorsPercent.push(parseFloat((100 - sectionDisponibility[index]).toFixed(2)));
+    
+    // totalPercent.push(100);
+    categories.push(element.date);
+  }, this);
+
+    chart = Highcharts.chart('container-referred', {
+      credits: { enabled: false },
+      chart: {
+        type: 'column'
+    },
+    title: {
+        text: title
+    },
+    xAxis: {
+        categories: categories
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: ''
+        },
+        stackLabels: {
+            enabled: true,
+            style: {
+                fontWeight: 'bold',
+                color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+            }
+        }
+    },
+    legend: {
+        align: 'right',
+        x: -30,
+        verticalAlign: 'top',
+        y: 25,
+        floating: true,
+        backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
+        borderColor: '#CCC',
+        borderWidth: 1,
+        shadow: false
+    },
+    tooltip: {
+        headerFormat: '<b>{point.x}</b><br/>',
+        pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+    },
+    plotOptions: {
+        column: {
+            stacking: 'normal',
+            dataLabels: {
+                enabled: true,
+                color: '#072146'
+            }
+        }
+    },
+    series: [{
+      name: 'Errores',
+      data: sectionErrorsPercent,
+      color: "#dde3ea" 
+    }, {
+      name: 'Disponivilidad',
+      data: sectionDisponibility,
+      color: "#d8be75"
+             
+    }]
+  });
+}
+
+
+
+
+
+
+
 </script>
 
 </html>
