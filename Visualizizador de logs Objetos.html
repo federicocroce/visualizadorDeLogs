@@ -50,6 +50,9 @@
         ::-webkit-scrollbar{width: 7px; background: transparent; height: 0}
         ::-webkit-scrollbar-track{background: transparent;}
         ::-webkit-scrollbar-thumb{background: #525252; border-radius: 10px}
+        button{width: calc(100% / 3); margin-right: -4px;}
+        .chart-container{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22);
+    margin-top: 20px;}
     </style>
 </head>
 
@@ -81,14 +84,15 @@
     <div class="switch">
       <button ng-class="{'button-focus': view == 'services'}" ng-click="view = 'services'">Servicios </button>      
       <button ng-click="view = 'errors'">Errores</button>      
+      <button ng-click="view = 'charts'">Gráficos</button>      
     </div>
     
 
-<div class="table first-child">
+<div class="table first-child" ng-if="view == 'services'">
   <div class="title-container">
     <h1 ng-if="allSections.length != 0" class="float-left"> {{allSections[allSections.length -1].successfulPercent}}</h1>    
     <h1 ng-if="allSections.length != 0" > {{allSections[0].name}}</h1>
-    <h1 ng-if="allSections.length != 0" class="float-right"> {{setDate(allSections)}}</h1>    
+    <h1 ng-if="allSections.length != 0" class="float-right"> {{rangeDate}}</h1>    
   </div>
     <table ng-if="allSections.length != 0">
       <tr>
@@ -112,7 +116,7 @@
       <div class="title-container">
           <h1 ng-if="allSections.length != 0" class="float-left"> {{services[services.length -1].successfulPercent}}</h1>    
           <h1 ng-if="services.length != 0" > {{services[0].name}}</h1>
-          <h1 ng-if="services.length != 0" class="float-right"> {{setDate(services)}}</h1>    
+          <h1 ng-if="services.length != 0" class="float-right"> {{rangeDate}} </h1>    
         </div>
     <table>
       <tr>
@@ -158,8 +162,22 @@
       </table>
     </div>
 
-    <div class="chart-container">
-      <div id="container-referred" style="min-width: 310px; max-width: 800px; height: 400px; margin: 0 auto">></div>
+    <div ng-show="view == 'charts'">
+
+      <div class="chart-container">
+        <div id="chart-all-services" style="min-width: 310px; max-width: 800px; height: 400px; margin: 0 auto"></div>
+      </div>
+
+      <div class="chart-container">
+        <div id="chart-section" style="min-width: 310px; max-width: 800px; height: 400px; margin: 0 auto"></div>
+      </div>
+      
+
+      <div ng-repeat="services in allServices track by $index">
+        <div class="chart-container">
+          <div id="chart-services-{{$index}}" style="min-width: 310px; max-width: 800px; height: 400px; margin: 0 auto"></div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -194,10 +212,16 @@
       $scope.inputLabel = "Seleccione las secciones";
 
       $scope.view = "services";
-
-      $scope.sectionsName = "plazofijo";
+      $scope.rangeDate = "";      
+      $scope.sectionsName = "";
+      // $scope.sectionsName = "plazofijo";
       $scope.isOpen = false;
       $scope.multipleInput = false;
+      var servicesCharts ={
+        disponibility : [],
+        errors:[],
+        categories : []
+      }
 
       $scope.init = function(){
         countFileSelected = 0;
@@ -211,6 +235,13 @@
         curString = "======================================================================================================================================";
         cantFiles = 0;
         stringToFindErrors = "";
+        $scope.rangeDate = "";
+
+        servicesCharts ={
+          disponibility : [],
+          errors:[],
+          categories : []
+        }
 
         $scope.view = "services";
         $scope.isOpen = false;
@@ -369,6 +400,8 @@ function setFila (target){
 
          $scope.allErrorsServices = allErrorsServices;
 
+         $scope.setDate($scope.allServices[0]);
+
         //  $scope.allErrorsServices.forEach(function(element, index) {
         //   sorByDate (element, 4);
         // }, this);
@@ -383,7 +416,16 @@ function setFila (target){
          }, this);
 
 
-         setChart ($scope.allSections);
+         setChart ($scope.allSections, 'chart-section', $scope.rangeDate);
+         setChart (null, 'chart-all-services', $scope.rangeDate, servicesCharts);
+        //  setChart ($scope.allServices[0], 'chart-services-0');
+
+        setTimeout(function () {
+          $scope.allServices.forEach(function(element, index) {
+          setChart (element, 'chart-services-'+index, $scope.rangeDate);        
+         }, this);
+        }, 0.5);
+         
         }        
     });
   }
@@ -454,7 +496,8 @@ function setFila (target){
 
   $scope.setDate = function(array){
     var endDate = array.length > 2 ? " / " + array[array.length -2].date : "";
-    return array[0].date + endDate;
+    $scope.rangeDate = array[0].date + endDate;
+    // return array[0].date + endDate;
   }
 
   $scope.setErrorName = function(array){
@@ -489,6 +532,14 @@ function setFila (target){
     total.errorsPercent = ((total.errors * 100)/total.executed).toFixed(2) + "%";
 
     array.push(total);
+
+    servicesCharts.disponibility.push(parseFloat(total.successfulPercent));
+    servicesCharts.errors.push(parseFloat(total.errorsPercent));
+    servicesCharts.categories.push(array[0].name);
+
+    
+
+    // sectionErrorsPercent.push(parseFloat((total.errorsPercent).toFixed(2)));
 
       
   }
@@ -547,29 +598,41 @@ function setFila (target){
     }
     }]);
 
-function setChart (array){ 
-  var sectionDisponibility = [];
-  var sectionErrorsPercent = [];
-  var categories = [];
-  var title = array[array.length-2].name + " "+ array[array.length-1].successfulPercent;
-  // var totalPercent = [];
 
-  array.forEach(function(element, index) {
-    if(array.length -1 == index) return;
-    sectionDisponibility.push(parseFloat(element.successfulPercent.trim()));
-    sectionErrorsPercent.push(parseFloat((100 - sectionDisponibility[index]).toFixed(2)));
-    
-    // totalPercent.push(100);
-    categories.push(element.date);
-  }, this);
+function setChart (array, idChart, rangeDate, servicesCharts){ 
+    var sectionDisponibility = [];  
+    var sectionErrorsPercent = [];
+    var categories = [];
+    var title = "";
+  if(idChart != "chart-all-services"){    
+    title = array[array.length-2].name + " "+ array[array.length-1].successfulPercent  + " ("+ rangeDate + ")";
 
-    chart = Highcharts.chart('container-referred', {
+    array.forEach(function(element, index) {
+      if(array.length -1 == index) return;
+      sectionDisponibility.push(parseFloat(element.successfulPercent.trim()));
+      sectionErrorsPercent.push(parseFloat((100 - sectionDisponibility[index]).toFixed(2)));
+      
+      // totalPercent.push(100);
+      categories.push(element.date);
+    }, this);
+  }
+  else{
+    sectionDisponibility = servicesCharts.disponibility;  
+    sectionErrorsPercent = servicesCharts.errors;
+    categories = servicesCharts.categories;
+    title = "Resumen de disponibilidad" + "(" + rangeDate + ")";
+  }
+
+  Highcharts.chart(idChart, {
       credits: { enabled: false },
       chart: {
         type: 'column'
     },
     title: {
-        text: title
+        text: title,
+        style: {
+            textTransform: "uppercase"
+        }
     },
     xAxis: {
         categories: categories
