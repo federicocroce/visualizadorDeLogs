@@ -51,17 +51,32 @@
         ::-webkit-scrollbar-track{background: transparent;}
         ::-webkit-scrollbar-thumb{background: #525252; border-radius: 10px}
         button{width: calc(100% / 3); margin-right: -4px;}
-        .chart-container{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22);
-    margin-top: 20px;}
+        .chart-container{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px;}
+        .error-text{color: red; padding: 20px; text-align: center; display: block; font-weight: bold;}
+        .show-for-print{display: none;}
+        div.saltopagina{
+            display: none;
+        }
     </style>
+    <style media="print">
+      .hide-for-print { display:none; }
+      .hide-for-print h1{margin-bottom: 20px; text-align: center;}
+      .show-for-print{display: inherit;}
+      div.saltopagina{ 
+          display:block; 
+          page-break-before:always;
+      }
+      tr{border:1px solid #072146;}
+      </style>
 </head>
 
 
 
 
 <body >
-  <div class="header">
-      
+  <h1 class="show-for-print"> REPORTE DE DISPONIBILIDAD DE {{allSections[0].name}} - ({{rangeDate}}) </h1>
+  
+  <div class="header hide-for-print"> 
       <span> SECCIÓN: </span>
       <div class="select-input">
         <input type="text" ng-model="sectionsName" ng-click='isOpen = !isOpen' ng-change="init()" placeholder="Indique la seccion">      
@@ -77,11 +92,14 @@
           <input type="file" name="file" id="file" multiple/>
           <label class="input-file" for="file">{{inputLabel}}</label>
       </div>    
+
+      <!--<a media="print">Imprimir</a>-->
+      <button ng-click="print()">Imprimir</button>
   </div>
  
-  <div ng-show="allSections.length != 0" class="all-tables">
+  <div id="content" ng-show="allSections.length != 0 && showContent()" class="all-tables">
 
-    <div class="switch">
+    <div class="switch hide-for-print">
       <button ng-class="{'button-focus': view == 'services'}" ng-click="view = 'services'">Servicios </button>      
       <button ng-click="view = 'errors'">Errores</button>      
       <button ng-click="view = 'charts'">Gráficos</button>      
@@ -90,19 +108,20 @@
 
 <div class="table first-child" ng-if="view == 'services'">
   <div class="title-container">
-    <h1 ng-if="allSections.length != 0" class="float-left"> {{allSections[allSections.length -1].successfulPercent}}</h1>    
+    <h1 ng-if="allSections.length != 0" class="float-left"> {{rangeDate}}</h1>      
     <h1 ng-if="allSections.length != 0" > {{allSections[0].name}}</h1>
-    <h1 ng-if="allSections.length != 0" class="float-right"> {{rangeDate}}</h1>    
+    <h1 ng-if="allSections.length != 0" class="float-right"> {{allSections[allSections.length -1].successfulPercent}}</h1>  
+       
   </div>
     <table ng-if="allSections.length != 0">
       <tr>
+        <th>FECHA</th>
         <th>EJECUCIONES</th>
         <th>EXITOSAS</th>
         <th>ADVERTENCIAS</th>
         <th>% EXITOSAS</th>
         <th>ERRORES</th>
-        <th>% ERRORES</th>
-        <th>FECHA</th>
+        <th>% ERRORES</th>        
       </tr>
       <tr ng-repeat="section in allSections track by $index">
         <td ng-repeat="value in section track by $index" ng-if="$index != 0" ng-class="{lastRow: section.name == 'Total'}">
@@ -110,23 +129,27 @@
         </td>
       </tr>
     </table>
+    <div class="saltopagina"></div>
   </div>
+
+  
 
   <div ng-repeat="services in allServices track by $index" class="table" ng-if="view == 'services'">
       <div class="title-container">
-          <h1 ng-if="allSections.length != 0" class="float-left"> {{services[services.length -1].successfulPercent}}</h1>    
+          <h1 ng-if="services.length != 0" class="float-left"> {{rangeDate}} </h1>    
           <h1 ng-if="services.length != 0" > {{services[0].name}}</h1>
-          <h1 ng-if="services.length != 0" class="float-right"> {{rangeDate}} </h1>    
-        </div>
+          <h1 ng-if="allSections.length != 0" class="float-right"> {{services[services.length -1].successfulPercent}}</h1> 
+          
+      </div>
     <table>
       <tr>
+          <th>FECHA</th>
           <th>EJECUCIONES</th>
           <th>EXITOSAS</th>
           <th>ADVERTENCIAS</th>
           <th>% EXITOSAS</th>
           <th>ERRORES</th>
-          <th>% ERRORES</th>
-          <th>FECHA</th>
+          <th>% ERRORES</th>          
         </tr>
       <tr ng-repeat="detail in services track by $index">
         <td ng-repeat="value in detail track by $index" ng-if="$index != 0" ng-class="{lastRow: detail.name == 'Total'}">
@@ -137,6 +160,7 @@
         </td>
       </tr>
     </table>
+    <div class="saltopagina"></div>
   </div>
 
 
@@ -160,6 +184,7 @@
           </td>
         </tr>
       </table>
+      <div class="saltopagina"></div>
     </div>
 
     <div ng-show="view == 'charts'">
@@ -181,6 +206,9 @@
     </div>
 
   </div>
+
+  <span ng-show="isVisibleError()" class="error-text"> {{errorText}} </span>
+
 </div>
 
 </body>
@@ -214,16 +242,20 @@
       $scope.view = "services";
       $scope.rangeDate = "";      
       $scope.sectionsName = "";
-      // $scope.sectionsName = "plazofijo";
+      $scope.sectionsName = "plazofijo";
       $scope.isOpen = false;
       $scope.multipleInput = false;
-      var servicesCharts ={
-        disponibility : [],
-        errors:[],
-        categories : []
-      }
+
+      $scope.loading = false;
+      $scope.isError = false;
+      $scope.errorText = "";
+
+      servicesCharts =[];
 
       $scope.init = function(){
+        // $scope.loading = false;
+        $scope.isError = false;
+        $scope.errorText = "";
         countFileSelected = 0;
         $scope.allSections = [];
         allSections = [];
@@ -237,11 +269,7 @@
         stringToFindErrors = "";
         $scope.rangeDate = "";
 
-        servicesCharts ={
-          disponibility : [],
-          errors:[],
-          categories : []
-        }
+        servicesCharts =[];
 
         $scope.view = "services";
         $scope.isOpen = false;
@@ -254,6 +282,24 @@
         }
       }
 
+      $scope.showContent = function(){
+          return $scope.errorText == "";
+      };
+
+      $scope.isVisibleError = function(){
+          return $scope.errorText != "";
+      };
+
+
+    // $scope.imprSelec = function(content)
+    //   {
+    //     var ficha=document.getElementById(content);var ventimp=window.open(' ','popimpr');ventimp.document.write(ficha.innerHTML);ventimp.document.close();ventimp.print();ventimp.close();
+    //   }
+
+    $scope.print = function(){
+      window.print();
+    }
+
       
 
       $scope.contentToogle = function(value){
@@ -265,6 +311,7 @@
 
       document.querySelector("input[type=file]").addEventListener("change", function(event) {
         $scope.init();
+        $scope.loading = true;
           var files = event.target.files;
           cantFiles = event.target.files.length;
           for (var i = 0; i < files.length; i++) {
@@ -310,7 +357,9 @@ function setFila (target){
       $scope.$apply(function() {
         $scope.inputLabel = "Seleccione los logs";
         $scope.multipleInput = true;
+        // $scope.loading = false;
       });
+      
       if($scope.sectionsName == "")  return;
     }
 
@@ -324,8 +373,8 @@ function setFila (target){
     stringToFindErrors = firstSlice.slice(firstSlice.indexOf("D E T A L L E    D E    E R R O R E S" ), firstSlice.indexOf("D E T A L L E       D E      A D V E R T E N C I A S")); // Obtengo todo el string de los errores.
 
     ////////// Seccion 
-    var sectionContent = formatSectionServiceObject(firstSlice.slice(0, findAll(firstSlice, curString, 0)).split('#')); // Seccion
-    sectionContent.date  = fileName;
+    var sectionContent = formatSectionServiceObject(firstSlice.slice(0, findAll(firstSlice, curString, 0)).split('#'), fileName); // Seccion
+    if(sectionContent == undefined) return;
     ////////////////////
 
     /// Obtengo el contenido de todos los servicios y sus totales de esa seccion
@@ -360,8 +409,8 @@ function setFila (target){
     transactionsNames.forEach(function(element, index) {  
       serviceArray = firstSlice.slice(firstSlice.indexOf(element)).slice(0, findAll(firstSlice, "%", 1)).split('#');
       if(serviceArray.length < 6) return; 
-      var services = formatSectionServiceObject(serviceArray);
-      services.date = fileName;
+      var services = formatSectionServiceObject(serviceArray, fileName);
+      
 
       //// Seteo de  errores todos los errores en un mismo array
       setErrors(services, firstSlice, fileName);
@@ -370,7 +419,7 @@ function setFila (target){
       allServices[index].push(services);
     }, this);
 
-    // Pusheo en la tabla de todas las secciones la seccion ya formateada con fecha y convertida a objeto.
+    // Pusheo en la tabla de todas las secciones la seccion ya formateada con fecha y conversion a objeto.
     allSections.push(sectionContent);
     countFileSelected +=1;
     $scope.$apply(function() {
@@ -422,24 +471,36 @@ function setFila (target){
 
         setTimeout(function () {
           $scope.allServices.forEach(function(element, index) {
-          setChart (element, 'chart-services-'+index, $scope.rangeDate);        
+          setChart (element, 'chart-services-'+index, $scope.rangeDate);  
          }, this);
         }, 0.5);
-         
-        }        
+          $scope.loading = false;
+        } 
+              
     });
+    
   }
 
-  function formatSectionServiceObject (array){
+  function formatSectionServiceObject (array, fileName){
     // console.log(array);
-    return {
-      name: array[0].trim(),
-      executed: parseFloat(array[1].trim()),
-      successful: parseFloat(array[2].trim()),
-      warning: parseFloat(array[3].trim()),
-      successfulPercent: array[4].trim(),
-      errors: parseFloat(array[5].trim()),
-      errorsPercent: array[6].trim()
+    try {
+      return {        
+        name: array[0].trim(),
+        date:fileName,
+        executed: parseFloat(array[1].trim()),
+        successful: parseFloat(array[2].trim()),
+        warning: parseFloat(array[3].trim()),
+        successfulPercent: array[4].trim(),
+        errors: parseFloat(array[5].trim()),
+        errorsPercent: array[6].trim()
+      }
+    }
+    catch(err) {
+      $scope.$apply(function() {
+        $scope.errorText = "No se puede leer el archivo " + fileName;
+      });
+      
+      return;
     }
   }
 
@@ -507,10 +568,12 @@ function setFila (target){
   function calculateTotal(array){
 
     // var baseLaength = array.length;
+    var servicesChartsData = {};
 
     // array.push([]);
     var total = {
       name: 0,
+      date: 0,
       executed: 0,
       successful: 0,
       warning: 0,
@@ -521,11 +584,11 @@ function setFila (target){
 
     array.forEach(function(element, index) {
       total.name = "Total";
+      total.date = "";
       total.executed += element.executed;
       total.successful += element.successful;
       total.warning += element.warning;
-      total.errors += element.errors;
-      total.date = "";
+      total.errors += element.errors;      
     }, this);
 
     total.successfulPercent = (((total.successful +  total.warning)* 100)/total.executed).toFixed(2) + "%";
@@ -533,9 +596,13 @@ function setFila (target){
 
     array.push(total);
 
-    servicesCharts.disponibility.push(parseFloat(total.successfulPercent));
-    servicesCharts.errors.push(parseFloat(total.errorsPercent));
-    servicesCharts.categories.push(array[0].name);
+    servicesChartsData = {
+      disponibility : parseFloat(total.successfulPercent),
+      errors : parseFloat(total.errorsPercent),
+      categories : array[0].name,
+    }
+
+    servicesCharts.push(servicesChartsData);
 
     
 
@@ -617,9 +684,18 @@ function setChart (array, idChart, rangeDate, servicesCharts){
     }, this);
   }
   else{
-    sectionDisponibility = servicesCharts.disponibility;  
-    sectionErrorsPercent = servicesCharts.errors;
-    categories = servicesCharts.categories;
+
+    var bkpSection = servicesCharts[0];
+    servicesCharts.splice(0, 1);
+    servicesCharts.sort(function(a, b){ return a.disponibility - b.disponibility; }); 
+    servicesCharts.splice(0, 0, bkpSection);
+
+    servicesCharts.forEach(function(element, index) {
+    sectionDisponibility.push(element.disponibility);  
+    sectionErrorsPercent.push(element.errors);
+    categories.push(element.categories);
+    }, this);  
+
     title = "Resumen de disponibilidad" + "(" + rangeDate + ")";
   }
 
@@ -635,17 +711,24 @@ function setChart (array, idChart, rangeDate, servicesCharts){
         }
     },
     xAxis: {
-        categories: categories
+        categories: categories,
+        style: {
+            textTransform: "uppercase"
+        }
     },
     yAxis: {
         min: 0,
         title: {
             text: ''
         },
+        style: {
+            textTransform: "uppercase"
+        },
         stackLabels: {
             enabled: true,
             style: {
                 fontWeight: 'bold',
+                textTransform: "uppercase",
                 color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
             }
         }
