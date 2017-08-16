@@ -43,20 +43,23 @@
         .table.first-child{margin-top: 1px;}
         .all-tables {padding: 1px 15px 15px 15px;}
         .switch{width: 100%; padding: 5px; background: #072146;}
-        button{ display: inline-block;font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white; color: #072146; padding: 10px 20px; border: 1px solid #072146; width: 50%;}
+        button{ display: inline-block;font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white; color: #072146; padding: 10px 20px; border: 1px solid #072146;}
         button:hover{cursor: pointer; background: #004481; color: white; border: 1px solid white;}
         .button-focus, button:focus{cursor: pointer; background: #072146; color: white; border: 1px solid white;}
         button:nth-child(2){margin-right: -4px; }
         ::-webkit-scrollbar{width: 7px; background: transparent; height: 0}
         ::-webkit-scrollbar-track{background: transparent;}
         ::-webkit-scrollbar-thumb{background: #525252; border-radius: 10px}
-        button{width: calc(100% / 3); margin-right: -4px;}
+        .switch button{width: calc(100% / 3); margin-right: -4px;}
         .chart-container{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px;}
         .error-text{color: red; padding: 20px; text-align: center; display: block; font-weight: bold;}
         .show-for-print{display: none;}
         div.saltopagina{
             display: none;
         }
+        .contact{float: right;}
+        .contact span{ color: white; text-align: right; display: block;}
+        .contact span.mail{ font-size: 12px; text-transform: unset; font-weight: bold;}
     </style>
     <style media="print">
       .hide-for-print { display:none; }
@@ -67,6 +70,7 @@
           page-break-before:always;
       }
       tr{border:1px solid #072146;}
+      .title-print{background: white; color: #072146; padding: 20px; text-align: center; display: inherit;}
       </style>
 </head>
 
@@ -74,27 +78,34 @@
 
 
 <body >
-  <h1 class="show-for-print"> REPORTE DE DISPONIBILIDAD DE {{allSections[0].name}} - ({{rangeDate}}) </h1>
+  <!--<h1> REPORTE DE DISPONIBILIDAD DE {{allSections[0].name}} - ({{rangeDate}}) </h1>-->
+  <h1 class="show-for-print title-print"> REPORTE DE DISPONIBILIDAD DE {{allSections[0].name}} - ({{rangeDate}}) </h1>
   
   <div class="header hide-for-print"> 
-      <span> SECCIÓN: </span>
-      <div class="select-input">
+      
+      <div class="select-input" ng-show="inputLabel == 'Seleccione los logs'">
+        <span> SECCIÓN: </span>
         <input type="text" ng-model="sectionsName" ng-click='isOpen = !isOpen' ng-change="init()" placeholder="Indique la seccion">      
       <!-- <input type="file" multiple /> -->
         <div class="content-openned" ng-show="isOpen && allSectionsNames.length != 0" >
             <p ng-repeat="value in allSectionsNames track by $index" ng-if="$index != 0" ng-click="contentToogle(value)">
                 {{value}}
             </p>
-          </div>
+        </div>
       </div>
 
-      <div style="display: inline-block;">
+      <div style="display: inline-block;" ng-show="inputLabel == 'Cargue las secciones' || inputLabel == 'Seleccione los logs' && sectionsName != ''">
           <input type="file" name="file" id="file" multiple/>
           <label class="input-file" for="file">{{inputLabel}}</label>
       </div>    
 
       <!--<a media="print">Imprimir</a>-->
-      <button ng-click="print()">Imprimir</button>
+      <button ng-show="allSections.length != 0 && showContent()" ng-click="print()">Imprimir</button>
+
+      <div class="contact">
+        <span>Contacto</span>
+        <span class="mail">federico.croce@bbva.com</span>
+      </div>
   </div>
  
   <div id="content" ng-show="allSections.length != 0 && showContent()" class="all-tables">
@@ -129,8 +140,8 @@
         </td>
       </tr>
     </table>
-    <div class="saltopagina"></div>
-  </div>
+  <div class="saltopagina"></div>
+</div>
 
   
 
@@ -164,7 +175,7 @@
   </div>
 
 
-  <div ng-repeat="services in allErrorsServices track by $index" class="table" ng-if="view == 'errors' && services.length > 0">
+  <div  ng-repeat="services in allErrorsServices track by $index" ng-class="{'first-child': $index == 0}" class="table" ng-if="view == 'errors' && services.length > 0" >
       <div class="title-container">
           <h1 ng-if="allSections.length != 0" > {{services[0].service}}</h1>
         </div>
@@ -237,12 +248,12 @@
       var curString = "======================================================================================================================================";
       var cantFiles = 0;
       var stringToFindErrors = "";
-      $scope.inputLabel = "Seleccione las secciones";
+      $scope.inputLabel = "Cargue las secciones";
 
       $scope.view = "services";
       $scope.rangeDate = "";      
       $scope.sectionsName = "";
-      $scope.sectionsName = "plazofijo";
+      // $scope.sectionsName = "plazofijo";
       $scope.isOpen = false;
       $scope.multipleInput = false;
 
@@ -278,7 +289,7 @@
           $scope.inputLabel = "Seleccione los logs";
         }
         else{
-          $scope.inputLabel = "Seleccione las secciones";
+          $scope.inputLabel = "Cargue las secciones";
         }
       }
 
