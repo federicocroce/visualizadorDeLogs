@@ -50,8 +50,9 @@
         ::-webkit-scrollbar{width: 7px; background: transparent; height: 0}
         ::-webkit-scrollbar-track{background: transparent;}
         ::-webkit-scrollbar-thumb{background: #525252; border-radius: 10px}
-        .switch button{width: calc(100% / 3); margin-right: -4px;}
+        .switch button{width: calc(100% / 5); margin-right: -4px;}
         .chart-container{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px;}
+        .chart{min-width: 10%; max-width: 80%; height: 400px; margin: 0 auto;}
         .error-text{color: red; padding: 20px; text-align: center; display: block; font-weight: bold;}
         .show-for-print{display: none;}
         div.saltopagina{
@@ -113,11 +114,13 @@
     <div class="switch hide-for-print">
       <button ng-class="{'button-focus': view == 'services'}" ng-click="view = 'services'">Servicios </button>      
       <button ng-click="view = 'errors'">Errores</button>      
-      <button ng-click="view = 'charts'">Gráficos</button>      
+      <button ng-click="view = 'charts'">Gráficos de Servicios</button>      
+      <button ng-click="view = 'groups'">Grupos</button>      
+      <button ng-click="view = 'chartsGroups'"> Gráficos de Grupos</button>      
     </div>
     
 
-<div class="table first-child" ng-if="view == 'services'">
+<div class="table" ng-if="view == 'services'">
   <div class="title-container">
     <h1 ng-if="allSections.length != 0" class="float-left"> {{rangeDate}}</h1>      
     <h1 ng-if="allSections.length != 0" > {{allSections[0].name}}</h1>
@@ -175,7 +178,37 @@
   </div>
 
 
-  <div  ng-repeat="services in allErrorsServices track by $index" ng-class="{'first-child': $index == 0}" class="table" ng-if="view == 'errors' && services.length > 0" >
+  <div ng-repeat="services in allGroups track by $index" class="table" ng-if="view == 'groups'">
+      <div class="title-container">
+          <h1 ng-if="services.length != 0" class="float-left"> {{rangeDate}} </h1>    
+          <h1 ng-if="services.length != 0" > {{services[0].name}}</h1>
+          <h1 ng-if="allSections.length != 0" class="float-right"> {{services[services.length -1].successfulPercent}}</h1> 
+          
+      </div>
+    <table>
+      <tr>
+          <th>FECHA</th>
+          <th>EJECUCIONES</th>
+          <th>EXITOSAS</th>
+          <th>ADVERTENCIAS</th>
+          <th>% EXITOSAS</th>
+          <th>ERRORES</th>
+          <th>% ERRORES</th>          
+        </tr>
+      <tr ng-repeat="detail in services track by $index">
+        <td ng-repeat="value in detail track by $index" ng-if="$index != 0" ng-class="{lastRow: detail.name == 'Total'}">
+            {{value}}
+        </td>
+        <td>
+
+        </td>
+      </tr>
+    </table>
+    <div class="saltopagina"></div>
+  </div>
+
+
+  <div  ng-repeat="services in allErrorsServices track by $index" class="table" ng-if="view == 'errors' && services.length > 0" >
       <div class="title-container">
           <h1 ng-if="allSections.length != 0" > {{services[0].service}}</h1>
         </div>
@@ -201,19 +234,25 @@
     <div ng-show="view == 'charts'">
 
       <div class="chart-container">
-        <div id="chart-all-services" style="min-width: 310px; max-width: 800px; height: 400px; margin: 0 auto"></div>
+        <div id="chart-all-services" class="chart"></div>
       </div>
 
       <div class="chart-container">
-        <div id="chart-section" style="min-width: 310px; max-width: 800px; height: 400px; margin: 0 auto"></div>
+        <div id="chart-section" class="chart"></div>
       </div>
       
 
       <div ng-repeat="services in allServices track by $index">
         <div class="chart-container">
-          <div id="chart-services-{{$index}}" style="min-width: 310px; max-width: 800px; height: 400px; margin: 0 auto"></div>
+          <div id="chart-services-{{$index}}" class="chart"></div>
         </div>
       </div>
+    </div>
+
+    <div ng-repeat="services in allGroups track by $index" ng-show="view == 'chartsGroups'">
+        <div class="chart-container">
+          <div id="chart-groups-{{$index}}" class="chart"></div>
+        </div>
     </div>
 
   </div>
@@ -240,6 +279,8 @@
       $scope.allSections = [];
       allSections = [];
       var transactionsNames = [];
+      var groupNames = [];
+      var allGroups = [];
       allErrorsServices = [];
       var allErrorsDescriptions = [];
       var allErrors = [];
@@ -271,6 +312,7 @@
         $scope.allSections = [];
         allSections = [];
         transactionsNames = [];
+        groupNames = [];
         allErrorsServices = [];
         allErrorsDescriptions = [];
         allErrors = [];
@@ -279,6 +321,9 @@
         cantFiles = 0;
         stringToFindErrors = "";
         $scope.rangeDate = "";
+
+        groupNames = [];
+        allGroups = [];
 
         servicesCharts =[];
 
@@ -377,7 +422,7 @@ function setFila (target){
 
     var fileName = target.fileName.replace('resumen-completo-','').replace('.log',''); // Obtengo el nombre del archivo (Fecha)
 
-    
+    var allgroupsData = target.result.slice(target.result.indexOf("TOTALES"), findAll(target.result, curString, 4));
 
     var firstSlice = target.result.slice(findAll(target.result, $scope.sectionsName, 1)); 
 
@@ -390,6 +435,7 @@ function setFila (target){
 
     /// Obtengo el contenido de todos los servicios y sus totales de esa seccion
     var servicesContent = firstSlice.slice(findAll(firstSlice, curString, 0), findAll(firstSlice, curString, 1)).split('#');
+    var groupContent = allgroupsData.replace(curString, "").trim().slice(0, findAll(allgroupsData, curString, 1)).split('#');
 
 
     if(allServices.length == 0){      // solo se ejecuta la primera vez
@@ -402,21 +448,37 @@ function setFila (target){
           else{ 
             transactionsNames.push(servicesContent[index].split("%")[1].trim());// Elimino los % sepradores y solo obtengo el nombre del servicio.
           }          
-      }
-    }, this);
+        }
+      }, this);
+
+      groupContent.forEach(function(element, index) {
+        if(multiple(index, 6)) {  //Si es multiplo de 6 significa que es una linea
+          if(index == 0){ // si es igual a 0 es el nombre del servicio mas los ====== sepradores
+            groupNames.push(groupContent[index].replace(curString, "").trim()); // Elimino los ====== sepradores y solo obtengo el nombre del servicio.
+          }
+          else{ 
+            groupNames.push(groupContent[index].split("%")[1].trim());// Elimino los % sepradores y solo obtengo el nombre del servicio.
+          }          
+        }
+      }, this);
 
         // 
         transactionsNames = transactionsNames.splice(0, transactionsNames.length -1);
+        groupNames = groupNames.splice(0, groupNames.length -1);
         
       
       // Hago un push en todos los servicios por cada nombre de servicio
       transactionsNames.forEach(function(element, index) {
         allServices.push([]);
        }, this);
+
+       groupNames.forEach(function(element, index) {
+        allGroups.push([]);
+       }, this);
     }
 
     
-    //  Por cada nombre de servicio voy obteniendo todos los servicios y los pusheo en todos los servicios 
+    //  Por cada nombre de servicio voy obteniendo todos los servicios y los pusheo
     transactionsNames.forEach(function(element, index) {  
       serviceArray = firstSlice.slice(firstSlice.indexOf(element)).slice(0, findAll(firstSlice, "%", 1)).split('#');
       if(serviceArray.length < 6) return; 
@@ -430,6 +492,11 @@ function setFila (target){
       allServices[index].push(services);
     }, this);
 
+    groupNames.forEach(function(element, index) {  
+      var groupArray = allgroupsData.slice(allgroupsData.indexOf(element)).slice(0, findAll(allgroupsData, "%", 1)).split('#');
+      allGroups[index].push(formatSectionServiceObject(groupArray, fileName));
+    }, this);
+
     // Pusheo en la tabla de todas las secciones la seccion ya formateada con fecha y conversion a objeto.
     allSections.push(sectionContent);
     countFileSelected +=1;
@@ -437,6 +504,7 @@ function setFila (target){
       if(cantFiles == countFileSelected){
         $scope.allSections = allSections;
         $scope.allServices = allServices;
+        $scope.allGroups = allGroups;
 
         // allErrorsServices.splice(0,1);
         
@@ -447,12 +515,17 @@ function setFila (target){
           sorByDate (element);
         }, this);
 
-        // console.log($scope.allSections);
+        $scope.allGroups.forEach(function(element, index) {
+          sorByDate (element);
+        }, this);
 
-        
-          calculateTotal($scope.allSections);
+        calculateTotal($scope.allSections);
           
-          $scope.allServices.forEach(function(element, index) {
+        $scope.allServices.forEach(function(element, index) {
+           calculateTotal(element);          
+         }, this);
+
+         $scope.allGroups.forEach(function(element, index) {
            calculateTotal(element);          
          }, this);
 
@@ -485,8 +558,17 @@ function setFila (target){
           setChart (element, 'chart-services-'+index, $scope.rangeDate);  
          }, this);
         }, 0.5);
+        setTimeout(function () {
+          $scope.allGroups.forEach(function(element, index) {
+          setChart (element, 'chart-groups-'+index, $scope.rangeDate);  
+          }, this);
+        }, 0.5);
           $scope.loading = false;
-        } 
+      } 
+        
+        
+
+        
               
     });
     
