@@ -251,10 +251,16 @@
       </div>
     </div>
 
-    <div ng-repeat="services in allGroups track by $index" class="first-child" ng-show="view == 'chartsGroups'">
-        <div class="chart-container">
-          <div id="chart-groups-{{$index}}" class="chart"></div>
-        </div>
+    <div ng-show="view == 'chartsGroups'" class="first-child">
+      <div class="chart-container">
+        <div id="chart-all-groups" class="chart"></div>
+      </div>
+
+      <div ng-repeat="services in allGroups track by $index" class="first-child">
+          <div class="chart-container">
+            <div id="chart-groups-{{$index}}" class="chart"></div>
+          </div>
+      </div>
     </div>
 
   </div>
@@ -306,7 +312,8 @@
       $scope.isError = false;
       $scope.errorText = "";
 
-      servicesCharts =[];
+      var servicesCharts =[];
+      var groupCharts =[];
 
       $scope.init = function(){
         // $scope.loading = false;
@@ -330,6 +337,7 @@
         allGroups = [];
 
         servicesCharts =[];
+        groupCharts =[];
 
         $scope.view = "services";
         $scope.isOpen = false;
@@ -544,11 +552,20 @@ function setFila (target){
         calculateTotal($scope.allSections);
           
         $scope.allServices.forEach(function(element, index) {
-           calculateTotal(element);          
+           calculateTotal(element, "services");          
          }, this);
+        
+
+        var sectionData = {
+          disponibility : parseFloat($scope.allSections[$scope.allSections.length-1].successfulPercent),
+          errors : parseFloat($scope.allSections[$scope.allSections.length-1].errorsPercent),
+          categories : $scope.allSections[0].name
+        }
+
+        servicesCharts.splice(0, 0, sectionData);
 
          $scope.allGroups.forEach(function(element, index) {
-           calculateTotal(element);          
+           calculateTotal(element, "groups");          
          }, this);
 
          setErrorsServices();
@@ -573,6 +590,7 @@ function setFila (target){
 
          setChart ($scope.allSections, 'chart-section', $scope.rangeDate);
          setChart (null, 'chart-all-services', $scope.rangeDate, servicesCharts);
+         setChart (null, 'chart-all-groups', $scope.rangeDate, groupCharts);
         //  setChart ($scope.allServices[0], 'chart-services-0');
 
         setTimeout(function () {
@@ -680,10 +698,11 @@ function setFila (target){
     return array[0][0] + "  " + array[array.length -1][3] + "  " + array[0][4] + " / " + array[array.length -2][7];
   }
 
-  function calculateTotal(array){
+  function calculateTotal(array, namesArray){
     if(array == undefined) return;
     // var baseLaength = array.length;
     var servicesChartsData = {};
+    var groupChartsData = {};
 
     // array.push([]);
     var total = {
@@ -712,19 +731,25 @@ function setFila (target){
 
     array.push(total);
 
-    servicesChartsData = {
-      disponibility : parseFloat(total.successfulPercent),
-      errors : parseFloat(total.errorsPercent),
-      categories : array[0].name,
+    if(namesArray == "services"){ 
+      servicesChartsData = {
+        disponibility : parseFloat(total.successfulPercent),
+        errors : parseFloat(total.errorsPercent),
+        categories : array[0].name,
+      }
+
+      servicesCharts.push(servicesChartsData);
     }
 
-    servicesCharts.push(servicesChartsData);
+    else if(namesArray == "groups"){ 
+      groupChartsData = {
+        disponibility : parseFloat(total.successfulPercent),
+        errors : parseFloat(total.errorsPercent),
+        categories : array[0].name,
+      }
 
-    
-
-    // sectionErrorsPercent.push(parseFloat((total.errorsPercent).toFixed(2)));
-
-      
+      groupCharts.push(groupChartsData);
+    }
   }
 
   function calculateErrorTotal(array){
@@ -789,7 +814,7 @@ function setChart (array, idChart, rangeDate, servicesCharts){
     var sectionErrorsPercent = [];
     var categories = [];
     var title = "";
-  if(idChart != "chart-all-services"){    
+  if(idChart != "chart-all-services" && idChart !="chart-all-groups"){    
     title = array[array.length-2].name + " "+ array[array.length-1].successfulPercent  + " ("+ rangeDate + ")";
 
     array.forEach(function(element, index) {
