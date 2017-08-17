@@ -36,13 +36,14 @@
         .input-file:active{background: #072146;}
         input[placeholder]{color: #9f9f9f;}
         input[type="text"]{font-size: 1.1em; height: 25px; background: transparent; color: white; text-transform: uppercase; border: none;border-bottom: 1px solid white; outline: none;}
-        .header{width: 100%; padding: 20px; background: #072146;}
+        /*.header{width: 100%; padding: 20px; background: #072146;}*/
+        .header{width: 100%; padding: 20px; background: #072146; position: fixed;}
         .header:hover{outline: none;}
         .input[type="text"]:focus{outline: none;}
         .table{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px;}
-        .table.first-child{margin-top: 1px;}
-        .all-tables {padding: 1px 15px 15px 15px;}
-        .switch{width: 100%; padding: 5px; background: #072146;}
+        .first-child{margin-top: 60px;}
+        .all-tables {padding: 80px 15px 15px 15px;}
+        .switch{width: 98%; padding: 5px; background: #072146; position: fixed}
         button{ display: inline-block;font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white; color: #072146; padding: 10px 20px; border: 1px solid #072146;}
         button:hover{cursor: pointer; background: #004481; color: white; border: 1px solid white;}
         .button-focus, button:focus{cursor: pointer; background: #072146; color: white; border: 1px solid white;}
@@ -51,8 +52,9 @@
         ::-webkit-scrollbar-track{background: transparent;}
         ::-webkit-scrollbar-thumb{background: #525252; border-radius: 10px}
         .switch button{width: calc(100% / 5); margin-right: -4px;}
-        .chart-container{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px;}
-        .chart{min-width: 10%; max-width: 80%; height: 400px; margin: 0 auto;}
+        .chart-container{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px; z-index: -4;}
+        .chart{min-width: 10%; max-width: 80%; height: 400px; margin: 0 auto; z-index: -4;}
+        .chart > div:first-child{z-index: -4 !important;}
         .error-text{color: red; padding: 20px; text-align: center; display: block; font-weight: bold;}
         .show-for-print{display: none;}
         div.saltopagina{
@@ -82,8 +84,7 @@
   <!--<h1> REPORTE DE DISPONIBILIDAD DE {{allSections[0].name}} - ({{rangeDate}}) </h1>-->
   <h1 class="show-for-print title-print"> REPORTE DE DISPONIBILIDAD DE {{allSections[0].name}} - ({{rangeDate}}) </h1>
   
-  <div class="header hide-for-print"> 
-      <span style="font-size: 10px;">v1.4</span>
+  <div class="header hide-for-print">       
       <div class="select-input" ng-show="inputLabel == 'Seleccione los logs'">        
         <span> SECCIÓN: </span>
         <input type="text" ng-model="sectionsName" ng-click='isOpen = !isOpen' ng-change="init()" placeholder="Indique la seccion">      
@@ -106,6 +107,7 @@
       <div class="contact">
         <span>Contacto</span>
         <span class="mail">federico.croce@bbva.com</span>
+        <span style="font-size: 10px; position: relative; bottom: -20px;">v1.4</span>
       </div>
   </div>
  
@@ -113,14 +115,14 @@
 
     <div class="switch hide-for-print">
       <button ng-class="{'button-focus': view == 'services'}" ng-click="view = 'services'">Servicios </button>      
-      <button ng-click="view = 'errors'">Errores</button>      
-      <button ng-click="view = 'charts'">Gráficos de Servicios</button>      
-      <button ng-click="view = 'groups'">Grupos</button>      
-      <button ng-click="view = 'chartsGroups'"> Gráficos de Grupos</button>      
+      <button ng-class="{'button-focus': view == 'errors'}" ng-click="view = 'errors'">Errores</button>      
+      <button ng-class="{'button-focus': view == 'charts'}" ng-click="view = 'charts'">Gráficos de Servicios</button>      
+      <button ng-class="{'button-focus': view == 'groups'}" ng-click="view = 'groups'">Grupos</button>      
+      <button ng-class="{'button-focus': view == 'chartsGroups'}" ng-click="view = 'chartsGroups'"> Gráficos de Grupos</button>      
     </div>
     
 
-<div class="table" ng-if="view == 'services'">
+<div class="table first-child" ng-if="view == 'services'">
   <div class="title-container">
     <h1 ng-if="allSections.length != 0" class="float-left"> {{rangeDate}}</h1>      
     <h1 ng-if="allSections.length != 0" > {{allSections[0].name}}</h1>
@@ -178,7 +180,7 @@
   </div>
 
 
-  <div ng-repeat="services in allGroups track by $index" class="table" ng-if="view == 'groups'">
+  <div ng-repeat="services in allGroups track by $index" class="table" ng-class="{'first-child': $index == 0}" ng-if="view == 'groups'">
       <div class="title-container">
           <h1 ng-if="services.length != 0" class="float-left"> {{rangeDate}} </h1>    
           <h1 ng-if="services.length != 0" > {{services[0].name}}</h1>
@@ -208,7 +210,7 @@
   </div>
 
 
-  <div  ng-repeat="services in allErrorsServices track by $index" class="table" ng-if="view == 'errors' && services.length > 0" >
+  <div  ng-repeat="services in allErrorsServices track by $index" ng-class="{'first-child': $index == 0}" class="table" ng-if="view == 'errors' && services.length > 0" >
       <div class="title-container">
           <h1 ng-if="allSections.length != 0" > {{services[0].service}}</h1>
         </div>
@@ -231,7 +233,7 @@
       <div class="saltopagina"></div>
     </div>
 
-    <div ng-show="view == 'charts'">
+    <div ng-show="view == 'charts'" class="first-child">
 
       <div class="chart-container">
         <div id="chart-all-services" class="chart"></div>
@@ -249,7 +251,7 @@
       </div>
     </div>
 
-    <div ng-repeat="services in allGroups track by $index" ng-show="view == 'chartsGroups'">
+    <div ng-repeat="services in allGroups track by $index" class="first-child" ng-show="view == 'chartsGroups'">
         <div class="chart-container">
           <div id="chart-groups-{{$index}}" class="chart"></div>
         </div>
@@ -281,6 +283,7 @@
       var transactionsNames = [];
       var groupNames = [];
       var allGroups = [];
+      var cantGroups = 0;
       allErrorsServices = [];
       var allErrorsDescriptions = [];
       var allErrors = [];
@@ -294,6 +297,7 @@
       $scope.view = "services";
       $scope.rangeDate = "";      
       $scope.sectionsName = "";
+      var setGroups = false;
       // $scope.sectionsName = "plazofijo";
       $scope.isOpen = false;
       $scope.multipleInput = false;
@@ -415,9 +419,24 @@ function setFila (target){
         $scope.multipleInput = true;
         // $scope.loading = false;
       });
+
       
+      cantGroups++
+      if(cantFiles == 1) setGroups = true;
       if($scope.sectionsName == "")  return;
     }
+
+    if(!setGroups){
+      if(cantFiles > cantGroups+1) {
+        cantGroups++
+        return;
+      }
+      else{
+        setGroups = true;
+        return;
+      }
+    }
+
 
 
     var fileName = target.fileName.replace('resumen-completo-','').replace('.log',''); // Obtengo el nombre del archivo (Fecha)
@@ -480,7 +499,7 @@ function setFila (target){
     
     //  Por cada nombre de servicio voy obteniendo todos los servicios y los pusheo
     transactionsNames.forEach(function(element, index) {  
-      serviceArray = firstSlice.slice(firstSlice.indexOf(element)).slice(0, findAll(firstSlice, "%", 1)).split('#');
+      serviceArray = firstSlice.slice(firstSlice.indexOf(element)).slice(0, findAll(firstSlice, "%", 1)).replace("\n", "").split('#');
       if(serviceArray.length < 6) return; 
       var services = formatSectionServiceObject(serviceArray, fileName);
       
@@ -493,7 +512,9 @@ function setFila (target){
     }, this);
 
     groupNames.forEach(function(element, index) {  
-      var groupArray = allgroupsData.slice(allgroupsData.indexOf(element)).slice(0, findAll(allgroupsData, "%", 1)).split('#');
+      // if(element == "test") debugger; 
+      var groupArray = allgroupsData.slice(allgroupsData.indexOf(element)).slice(0, findAll(allgroupsData, "%", 1)).replace("\n", "").split('#');
+      if(groupArray[0] == "") return;      
       allGroups[index].push(formatSectionServiceObject(groupArray, fileName));
     }, this);
 
@@ -516,6 +537,7 @@ function setFila (target){
         }, this);
 
         $scope.allGroups.forEach(function(element, index) {
+          if(element == undefined) return;
           sorByDate (element);
         }, this);
 
@@ -659,7 +681,7 @@ function setFila (target){
   }
 
   function calculateTotal(array){
-
+    if(array == undefined) return;
     // var baseLaength = array.length;
     var servicesChartsData = {};
 
@@ -676,6 +698,7 @@ function setFila (target){
     };
 
     array.forEach(function(element, index) {
+      if(element == undefined) return;
       total.name = "Total";
       total.date = "";
       total.executed += element.executed;
@@ -734,10 +757,12 @@ function setFila (target){
   }
 
   function sorByDate (array) {
+    if(array == undefined) return;
     for(var i=1;i<array.length;i++)
       {
           for(var j=0;j<(array.length-i);j++)
           {
+            if(array[j] == undefined || array[j+1] == undefined) return;
               if(array[j].date > array[j+1].date)
               {
                   k=array[j+1];
