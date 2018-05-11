@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns:ng="http://angularjs.org" ng-app="myApp" ng-controller="Main">
+
+<head>
+  <meta charset="UTF-8">
+    <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          text-decoration: none;
+        }
+        @import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700');
+        /*@font-face {
+            font-family: myFirstFont;
+            src: url(https://drive.google.com/open?id=0B-h9FVNp0OH5RmZEWWJqSUd2ZFk);
+        }*/
+
+        body {
+            margin: 0;
+            font-size: 13px;
+            font-family: 'Roboto Condensed', sans-serif;
+            font-family: 'myFirstFont', sans-serif;
+        }
+
+        table{text-align: right; width:100%; border-collapse:collapse;}
+        .title-container {background: #072146; text-align: center; padding: 10px; width: 100%;}
+        h1{text-transform: uppercase; background: #072146; color: white; font-size: 1.4em; margin: 0;  display: inline-block;}
+        h1.float-right{float: right;}
+        h1.float-left{float: left;}
+        th{background:#004481; color: white; padding: 5px;}
+        td{color: #072146}
+        td.lastRow{font-weight: bold; background: #525252; color: white; font-size: 1.1em;}
+        span{text-transform: uppercase; font-size: 1em; color: white;}
+        input[type="file"]{width: 0.1px; height: 0.1px; opacity: 0; overflow: hidden; position: absolute; z-index: -1; }
+        .input-file{font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white;color: #072146; padding: 10px 20px; border: none; margin-left: 20px;}
+        .content-openned{background: white; position: absolute; overflow: scroll; width: 100%; height: 180px;}
+        .content-openned p{color: #072146; padding: 10px; text-transform: uppercase;}
+        .content-openned p:hover{color: white; cursor: pointer; background: #004481;}
+        .select-input{display: inline-block; position: relative; top: 10px;}
+        .input-file:hover{ cursor: pointer; background: #004481; color: white; border: 1px solid white;}
+        .input-file:active{background: #072146;}
+        input[placeholder]{color: #9f9f9f;}
+        input[type="text"]{font-size: 1.1em; height: 25px; background: transparent; color: white; text-transform: uppercase; border: none;border-bottom: 1px solid white; outline: none;}
+        /*.header{width: 100%; padding: 20px; background: #072146;}*/
+        .header{width: 100%; padding: 20px 20px 0 20px; background: #072146; position: fixed;}
+        .header:hover{outline: none;}
+        .input[type="text"]:focus{outline: none;}
+        .table{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px;}
+        .first-child{margin-top: 60px;}
+        .all-tables {padding: 80px 15px 15px 15px;}
+        .switch{width: 98%; padding: 5px; background: #072146; position: fixed}
+        button{ display: inline-block;font-size: 0.8em; transition: all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms; text-transform: uppercase; top: 0px; background: white; color: #072146; padding: 10px 20px; border: 1px solid #072146;}
+        button:hover{cursor: pointer; background: #004481; color: white; border: 1px solid white;}
+        .button-focus, button:focus{cursor: pointer; background: #072146; color: white; border: 1px solid white;}
+        button:nth-child(2){margin-right: -4px; }
+        ::-webkit-scrollbar{width: 7px; background: transparent; height: 0}
+        ::-webkit-scrollbar-track{background: transparent;}
+        ::-webkit-scrollbar-thumb{background: #525252; border-radius: 10px}
+        .switch button{width: calc(100% / 5); margin-right: -4px;}
+        .chart-container{box-shadow: 0 -2px 14px rgba(0,0,0,0.25), 0 10px 14px rgba(0,0,0,0.22); margin-top: 20px; z-index: -4;}
+        .chart{min-width: 10%; max-width: 80%; height: 400px; margin: 0 auto; z-index: -4;}
+        .chart > div:first-child{z-index: -4 !important;}
+        .error-text{color: red; padding: 20px; text-align: center; display: block; font-weight: bold;}
+        .show-for-print{display: none;}
+        div.saltopagina{
+            display: none;
+        }
+        .contact{float: right; position: relative; top: -7px;}
+        .contact button{padding: 4px 20px;}
+        .contact span{ color: white; text-align: right; display: block;}
+        .contact span.mail{ font-size: 12px; text-transform: unset; font-weight: bold;}
+        .popUp {
+            width: 60%;
+            height: 80%;
+            background: white;
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0 auto;
+            left: 0;
+            right: 0;
+            box-shadow: 0px 0px 18px #888888;
+            overflow: scroll;
+            color: #072146;
+            padding: 10px;
+        }
+
+        .label-date-detail-popUp{
+            float: right;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .popUp h1{
+          color: #072146;            
+          background: white;
+          font-size: 1.5em;
+          display: block;
+          text-align: center;
+          padding: 20px 0;
+        }
+
+        .popUp p{
+          margin-bottom: 10px;
+          font-size: 1.1em;
+        }            
+
+        .popUp h2{
+            font-size: 1.3em;
+            margin-top: 30px;
+        }
+        
+        .btn-close {
+            float: right;
+            padding-top: 10px;
+            font-size: 1.1em;
+            color: #072146;
+        }
+        .btn-close:hover {
+            cursor: pointer;
+        }
+
+        .header-popUp {
+          padding: 0 10px;
+          text-align: center;
+          padding-bottom: 20px;;
+        }
+    </style>
+    <style media="print">
+      .hide-for-print { display:none; }
+      .hide-for-print h1{margin-bottom: 20px; text-align: center;}
+      .show-for-print{display: inherit;}
+      div.saltopagina{ 
+          display:block; 
+          page-break-before:always;
+      }
+      tr{border:1px solid #072146;}
+      .title-print{background: white; color: #072146; padding: 20px; text-align: center; display: inherit;}
+          
+      </style>
+</head>
+
+
+
+
+<body >
+  <!--<h1> REPORTE DE DISPONIBILIDAD DE {{allSections[0].name}} - ({{rangeDate}}) </h1>-->
+  <h1 class="show-for-print title-print"> REPORTE DE DISPONIBILIDAD DE {{allSections[0].name}} - ({{rangeDate}}) </h1>
+  
+  <div class="header hide-for-print">       
+      <div class="select-input" ng-show="inputLabel == 'Seleccione los logs'">        
+        <span> SECCIÓN: </span>
+        <input type="text" ng-model="sectionsName" ng-click='isOpen = !isOpen' ng-change="init()" placeholder="Indique el grupo">      
+      <!-- <input type="file" multiple /> -->
+        <div class="content-openned" ng-show="isOpen && allSectionsNames.length != 0" >
+            <p ng-repeat="value in allSectionsNames track by $index" ng-click="contentToogle(value)">
+                {{value}}
+            </p>
+        </div>
+      </div>
+
+      <div style="display: inline-block; position: relative; top: 10px;" ng-show="inputLabel == 'Cargue los grupos' || inputLabel == 'Seleccione los logs' && sectionsName != ''">
+          <input type="file" name="file" id="file" multiple/>
+          <label class="input-file" for="file">{{inputLabel}}</label>
+      </div>    
+
+      <!--<a media="print">Imprimir</a>-->
+      <button style="position: relative; top: 10px;" ng-show="allSections.length != 0 && showContent()" ng-click="print()">Imprimir</button>
+
+      <div class="contact">
+        <span>Contacto</span>
+        <span class="mail">federico.croce@bbva.com</span>
+        <span style="font-size: 10px; position: relative; bottom: -20px; width: 68px; right: -53%;">v1.4</span>
+        <button ng-click="tooglePopUp()">?</button>
+      </div>
+  </div>
+ 
+  <div id="content" ng-show="allSections.length != 0 && showContent()" class="all-tables">
+
+    <div class="switch hide-for-print">
+      <button ng-class="{'button-focus': view == 'services'}" ng-click="view = 'services'">Servicios </button>      
+      <button ng-class="{'button-focus': view == 'errors'}" ng-click="view = 'errors'">Errores</button>      
+      <button ng-class="{'button-focus': view == 'charts'}" ng-click="view = 'charts'">Gráficos de Servicios</button>      
+      <button ng-class="{'button-focus': view == 'groups'}" ng-click="view = 'groups'">Grupos (Canal)</button>      
+      <button ng-class="{'button-focus': view == 'chartsGroups'}" ng-click="view = 'chartsGroups'"> Gráficos de Grupos (Canal)</button>      
+    </div>
+    
+
+<div class="table first-child" ng-if="view == 'services'">
+  <div class="title-container">
+    <h1 ng-if="allSections.length != 0" class="float-left"> {{rangeDate}}</h1>      
+    <h1 ng-if="allSections.length != 0" > {{allSections[0].name}}</h1>
+    <h1 ng-if="allSections.length != 0" class="float-right"> {{allSections[allSections.length -1].successfulPercent}}</h1>  
+       
+  </div>
+    <table ng-if="allSections.length != 0">
+      <tr>
+        <th>FECHA</th>
+        <th>EJECUCIONES</th>
+        <th>EXITOSAS</th>
+        <th>ADVERTENCIAS</th>
+        <th>% EXITOSAS</th>
+        <th>ERRORES</th>
+        <th>% ERRORES</th>        
+      </tr>
+      <tr ng-repeat="section in allSections track by $index">
+        <td ng-repeat="value in section track by $index" ng-if="$index != 0" ng-class="{lastRow: section.name == 'Total'}">
+            {{value}}
+        </td>
+      </tr>
+    </table>
+  <div class="saltopagina"></div>
+</div>
+
+    
+
+  <div ng-repeat="services in allServices track by $index" class="table" ng-if="view == 'services'">
+      <div class="title-container">
+          <h1 ng-if="services.length != 0" class="float-left"> {{rangeDate}} </h1>    
+          <h1 ng-if="services.length != 0" > {{services[0].name}}</h1>
+          <h1 ng-if="allSections.length != 0" class="float-right"> {{services[services.length -1].successfulPercent}}</h1> 
+          
+      </div>
+    <table>
+      <tr>
+          <th>FECHA</th>
+          <th>EJECUCIONES</th>
+          <th>EXITOSAS</th>
+          <th>ADVERTENCIAS</th>
+          <th>% EXITOSAS</th>
+          <th>ERRORES</th>
+          <th>% ERRORES</th>          
+        </tr>
+      <tr ng-repeat="detail in services track by $index">
+        <td ng-repeat="value in detail track by $index" ng-if="$index != 0" ng-class="{lastRow: detail.name == 'Total'}">
+            {{value}}
+        </td>
+        <td>
+
+        </td>
+      </tr>
+    </table>
+    <div class="saltopagina"></div>
+
+    <!--<pre>{{services|json}}</pre>-->
+
+  </div>
+
+
+  <div ng-repeat="services in allGroups track by $index" class="table" ng-class="{'first-child': $index == 0}" ng-if="view == 'groups'">
+      <div class="title-container">
+          <h1 ng-if="services.length != 0" class="float-left"> {{rangeDate}} </h1>    
+          <h1 ng-if="services.length != 0" > {{services[0].name}}</h1>
+          <h1 ng-if="allSections.length != 0" class="float-right"> {{services[services.length -1].successfulPercent}}</h1> 
+          
+      </div>
+    <table>
+      <tr>
+          <th>FECHA</th>
+          <th>EJECUCIONES</th>
+          <th>EXITOSAS</th>
+          <th>ADVERTENCIAS</th>
+          <th>% EXITOSAS</th>
+          <th>ERRORES</th>
+          <th>% ERRORES</th>          
+        </tr>
+      <tr ng-repeat="detail in services track by $index">
+        <td ng-repeat="value in detail track by $index" ng-if="$index != 0" ng-class="{lastRow: detail.name == 'Total'}">
+            {{value}}
+        </td>
+        <td>
+
+        </td>
+      </tr>
+    </table>
+    <div class="saltopagina"></div>
+  </div>
+
+
+  <div  ng-repeat="services in allErrorsServices track by $index" ng-class="{'first-child': $index == 0}" class="table" ng-if="view == 'errors' && services.length > 0" >
+    
+      <div class="title-container">
+          <h1 ng-if="allSections.length != 0" > {{services[0].service}}</h1>
+        </div>
+      <!--<h1>{{setErrorName(services)}}</h1>-->
+      <table>
+        <tr>
+            <th>CODIGO</th>
+            <th>DESCRIPCION</th>
+            <th>CANTIDAD</th>
+          </tr>
+        <tr ng-repeat="error in services track by $index">
+          <td ng-repeat="value in error track by $index" ng-if="$index != 0" ng-class="{lastRow: detail[0] == 'Total'}">
+              {{value}}
+          </td>
+          <td>
+
+          </td>
+        </tr>
+      </table>
+
+      <div class="saltopagina"></div>
+    </div>
+
+    <div ng-show="view == 'charts'" class="first-child">
+
+      <div class="chart-container">
+        <div id="chart-all-services" class="chart"></div>
+      </div>
+      <div class="saltopagina"></div>
+
+      <div class="chart-container">
+        <div id="chart-section" class="chart"></div>
+      </div>
+      <div class="saltopagina"></div>      
+
+      <div ng-repeat="services in allServices track by $index">
+        <div class="chart-container">
+          <div id="chart-services-{{$index}}" class="chart"></div>
+        </div>
+        <div class="saltopagina"></div>
+      </div>
+    </div>
+
+    <div ng-show="view == 'chartsGroups'" class="first-child">
+      <div class="chart-container">
+        <div id="chart-all-groups" class="chart"></div>
+      </div>
+      <div class="saltopagina"></div>
+
+      <div ng-repeat="services in allGroups track by $index" class="first-child">
+          <div class="chart-container">
+            <div id="chart-groups-{{$index}}" class="chart"></div>
+          </div>
+          <div class="saltopagina"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <span ng-show="isVisibleError()" class="error-text"> {{errorText}} </span>
+
+</div>
+
+
+
+<!-- POPUP DE AYUDA -->
+    <div ng-if="openPopUp" class="popUp">
+        <div class="header-popUp">
+            <span ng-click="tooglePopUp()" class="btn-close">Cerrar</span>
+        </div>
+
+            <h1>¿Cómo generar un reporte?</h1>
+            
+            <p>1- Cargue los grupos seleccionando solo un log</p>
+            <p>2- Seleccione o escriba el grupo que desea analizar</p>
+            <p>3- Cargue todos los logs que desea analizar</p>
+            <p>* Cada vez que desea anailizar un nuevo grupo recargue la página</p>
+
+            <h1>¿Cómo imprimir?</h1>
+            
+            <p> Una vez generado el reporte y luego de haber presionado el boton "IMPRIMIR" se debe configurar la impresión:</p>
+            <li>Deseleccionar Encabezado y pie de página</li>
+            <li>Seleccionar Gráficos de fondo</li>
+
+        
+        
+    </div>
+
+</body>
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script src="https://code.angularjs.org/1.4.8/i18n/angular-locale_es-ar.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+
+<script>
+      var myApp = angular.module('myApp',[]);
+
+    myApp.controller('Main', ['$scope', function($scope) {
+      var countFileSelected = 0;
+      $scope.allSections = [];
+      allSections = [];
+      var transactionsNames = [];
+      var groupNames = [];
+      var allGroups = {};
+      var cantGroups = 0;
+      var beginDate ='';
+      var endDate = '';
+      allErrorsServices = [];
+      var allErrorsDescriptions = [];
+      var allErrors = [];
+      allServices = {};
+      $scope.allSectionsNames = [];
+      var curString = "======================================================================================================================================";
+      var cantFiles = 0;
+      var stringToFindErrors = "";
+      $scope.inputLabel = "Cargue los grupos";
+
+      $scope.view = "services";
+      $scope.rangeDate = "";      
+      $scope.sectionsName = "";
+      var setGroups = false;
+      // $scope.sectionsName = "plazofijo";
+      $scope.isOpen = false;
+      $scope.multipleInput = false;
+
+      $scope.loading = false;
+      $scope.isError = false;
+      $scope.errorText = "";
+
+      var servicesCharts =[];
+      var groupCharts =[];
+
+      $scope.openPopUp = false;
+
+      $scope.tooglePopUp = function () {
+          $scope.openPopUp = !$scope.openPopUp;
+      }
+
+
+      $scope.init = function(){
+        // $scope.loading = false;
+        $scope.isError = false;
+        $scope.errorText = "";
+        countFileSelected = 0;
+        beginDate ='';
+        endDate = '';
+        $scope.allSections = [];
+        allSections = [];
+        transactionsNames = [];
+        groupNames = [];
+        allErrorsServices = [];
+        allErrorsDescriptions = [];
+        allErrors = [];
+        allServices = {};
+        curString = "======================================================================================================================================";
+        cantFiles = 0;
+        stringToFindErrors = "";
+        $scope.rangeDate = "";
+
+        groupNames = [];
+        allGroups = {};
+
+        servicesCharts =[];
+        groupCharts =[];
+
+        $scope.view = "services";
+        $scope.isOpen = false;
+
+        if($scope.sectionsName != ""){
+          $scope.inputLabel = "Seleccione los logs";
+        }
+        else{
+          $scope.inputLabel = "Cargue los grupos";
+        }
+      }
+
+      $scope.showContent = function(){
+          return $scope.errorText == "";
+      };
+
+      $scope.isVisibleError = function(){
+          return $scope.errorText != "";
+      };
+
+
+    $scope.print = function(){
+      window.print();
+    }
+
+      
+
+      $scope.contentToogle = function(value){
+        $scope.sectionsName = value;
+        $scope.isOpen = false;
+        $scope.init();
+      }
+      
+
+      document.querySelector("input[type=file]").addEventListener("change", function(event) {
+        $scope.init();
+        $scope.loading = true;
+          var files = event.target.files;
+          cantFiles = event.target.files.length;
+          for (var i = 0; i < files.length; i++) {
+            (function(file) {
+              var reader = new FileReader();
+              reader.fileName = file.name
+              reader.onload = function(e, file) {
+                    setFila(e.target);  
+              };
+              reader.readAsText(file)
+            }(files[i]))
+          }
+        })
+
+        Array.prototype.contains = function(obj, value) {
+          var i = this.length;
+          while (i--) {
+              if (this[i][value] === obj) {
+                  return i;
+              }
+          }
+          return -1;
+        }
+
+
+function setFila (target){
+
+    if($scope.allSectionsNames.length == 0){
+
+      var contetSectionsNames = target.result.slice(findAll(target.result, curString, 3), findAll(target.result, curString, 4)).split('#');
+
+      contetSectionsNames.forEach(function(element, index) {
+        if(multiple(index, 6)) {  //Si es multiplo de 6 significa que es una linea
+          if(index == 0){ // si es igual a 0 es el nombre del servicio mas los ====== sepradores
+            $scope.allSectionsNames.push(contetSectionsNames[index].replace(curString, "").trim()); // Elimino los ====== sepradores y solo obtengo el nombre del servicio.
+          }
+          else{ 
+            $scope.allSectionsNames.push(contetSectionsNames[index].split("%")[1].trim());// Elimino los % sepradores y solo obtengo el nombre del servicio.
+          }          
+        }
+      }, this);
+      $scope.allSectionsNames = $scope.allSectionsNames.splice(0, $scope.allSectionsNames.length -1);
+      $scope.$apply(function() {
+        $scope.inputLabel = "Seleccione los logs";
+        $scope.multipleInput = true;
+        // $scope.loading = false;
+      });
+
+      
+      cantGroups++
+      if(cantFiles == 1) setGroups = true;
+      if($scope.sectionsName == "")  return;
+    }
+
+    if(!setGroups){
+      if(cantFiles > cantGroups+1) {
+        cantGroups++
+        return;
+      }
+      else{
+        setGroups = true;
+        return;
+      }
+    }
+
+
+
+    var fileName = target.fileName.replace('resumen-completo-','').replace('.log',''); // Obtengo el nombre del archivo (Fecha)
+
+    var allgroupsData = target.result.slice(target.result.indexOf("TOTALES"), findAll(target.result, curString, 4));
+
+    var firstSlice = target.result.slice(findAll(target.result, $scope.sectionsName, 1)); 
+
+    stringToFindErrors = firstSlice.slice(firstSlice.indexOf("D E T A L L E    D E    E R R O R E S" ), firstSlice.indexOf("D E T A L L E       D E      A D V E R T E N C I A S")); // Obtengo todo el string de los errores.
+
+    ////////// Seccion 
+    var sectionContent = formatSectionServiceObject(firstSlice.slice(0, findAll(firstSlice, curString, 0)).split('#'), fileName); // Seccion
+    if(sectionContent == undefined) return;
+    ////////////////////
+
+    /// Obtengo el contenido de todos los servicios y sus totales de esa seccion
+    var servicesContent = firstSlice.slice(findAll(firstSlice, curString, 0), findAll(firstSlice, curString, 1)).split('#');
+    var groupContent = allgroupsData.replace(curString, "").trim().slice(0, findAll(allgroupsData, curString, 1)).split('#');
+
+
+
+    setArrayNames(servicesContent, transactionsNames); // Seteo el arreglo de nombre de servicios y transacciones.
+    setArrayNames(groupContent, groupNames); // Seteo el arreglo de nombre de grupos.
+     
+    function setArrayNames (content, array){
+      content.forEach(function(element, index) { // Cargo los nombres de las transacciones por cada archivo
+
+        var repeatTrx = false;
+
+            if(multiple(index, 6)) {  //Si es multiplo de 6 significa que es una linea
+
+            var name = index == 0 ? content[index].replace(curString, "").trim() : content[index].split("%")[1].trim();
+
+              repeatTrx = checkRepeat(array, index, name); // Verifico por cada transaccion si existe o no en el arreglo
+              
+              if(!repeatTrx && name != ""){ // Si no existe la agrego al array
+                array.push(name);
+              }
+        }
+      }, this);
+    }
+
+
+      function checkRepeat(array, index, name){
+        var repeat = false;
+        array.forEach(function(currentName, indexServ) { // Verifico por cada transaccion si existe o no en el arreglo
+          if(currentName == name) repeat = true;
+        }, this);
+          return repeat;
+      };
+
+
+    // Cargo todos los servicios y transacciones que voy a mostrar
+    transactionsNames.forEach(function(element, index) {
+
+      var serviceSlice = firstSlice.slice(0, findAll(firstSlice, curString, 1));
+
+      serviceArray = serviceSlice.slice(serviceSlice.indexOf(element)).slice(0, findAll(serviceSlice, "%", 1)).replace("\n", "").split('#');
+      
+      if(serviceArray.length < 6) return; 
+
+      var services = formatSectionServiceObject(serviceArray, fileName);
+
+      setErrors(services, serviceSlice, fileName);
+
+      var repeatSerive = false;
+
+      if(!Array.isArray(allServices[services.name])) allServices[services.name] = [];
+
+      allServices[services.name].push(services);
+
+    }, this);
+
+
+    // Cargo todos los grupos que voy a mostrar
+    groupNames.forEach(function(element, index) {  
+
+      var groupArray = allgroupsData.slice(allgroupsData.indexOf(element)).slice(0, findAll(allgroupsData, "%", 1)).replace("\n", "").split('#');
+
+      var group = formatSectionServiceObject(groupArray, fileName);
+
+       if(!Array.isArray(allGroups[group.name])) allGroups[group.name] = [];
+
+      allGroups[group.name].push(group);
+
+    }, this);
+    
+
+    // Pusheo en la tabla de todas las secciones la seccion ya formateada con fecha y conversion a objeto.
+    allSections.push(sectionContent);
+
+    //Seteo la fecha de inicio y de fin
+    if(countFileSelected == 0) beginDate = fileName;
+    if(cantFiles-1 == countFileSelected) endDate = fileName;
+    ///////////////////
+
+    countFileSelected +=1;
+    
+    $scope.$apply(function() {
+      if(cantFiles == countFileSelected){
+        $scope.allSections = allSections;
+        $scope.allServices = allServices;
+        $scope.allGroups = allGroups;
+
+        //Seteo el renago de fechas
+        $scope.rangeDate = beginDate + "/" + endDate;
+
+        // Ordeno las fechas de la seccion principal.
+        sorByDate ($scope.allSections);
+
+        // Ordeno las fechas de cada transaccion
+        Object.keys($scope.allServices).map(function(key) {
+          sorByDate ($scope.allServices[key]);
+          calculateTotal($scope.allServices[key], "services"); 
+        });
+        
+        Object.keys($scope.allGroups).map(function(key) {
+          sorByDate ($scope.allGroups[key]);
+          calculateTotal($scope.allGroups[key], "groups");
+        });
+
+        calculateTotal($scope.allSections);
+
+        setErrorsServices();
+
+
+        var sectionData = {
+          disponibility : parseFloat($scope.allSections[$scope.allSections.length-1].successfulPercent),
+          errors : parseFloat($scope.allSections[$scope.allSections.length-1].errorsPercent),
+          categories : $scope.allSections[0].name
+        }
+
+        servicesCharts.splice(0, 0, sectionData);
+
+        $scope.allErrorsServices = allErrorsServices;         
+
+         $scope.allErrorsServices.forEach(function(element, index) {
+          element.sort(function(a, b){ return b.count - a.count; });    
+         }, this);
+
+
+         setChart ($scope.allSections, 'chart-section', $scope.rangeDate);
+         setChart (null, 'chart-all-services', $scope.rangeDate, servicesCharts);
+         setChart (null, 'chart-all-groups', $scope.rangeDate, groupCharts);
+
+        setTimeout(function () {
+          Object.keys($scope.allServices).map(function(key, index) {
+            setChart ($scope.allServices[key], 'chart-services-'+index, $scope.rangeDate);
+        });
+        }, 0.5);
+        setTimeout(function () {
+          Object.keys($scope.allGroups).map(function(key, index) {
+            setChart ($scope.allGroups[key], 'chart-groups-'+index, $scope.rangeDate); 
+          });
+        }, 0.5);
+          $scope.loading = false;
+      } 
+                      
+    });
+    
+  }
+
+  function formatSectionServiceObject (array, fileName){
+    // console.log(array);
+    if(array[0].trim() == "") return;
+    try {
+      return {        
+        name: array[0].trim(),
+        date:fileName,
+        executed: parseFloat(array[1].trim()),
+        successful: parseFloat(array[2].trim()),
+        warning: parseFloat(array[3].trim()),
+        successfulPercent: array[4].trim(),
+        errors: parseFloat(array[5].trim()),
+        errorsPercent: array[6].trim()
+      }
+    }
+    catch(err) {
+      $scope.$apply(function() {
+        $scope.errorText = "No se puede leer el archivo " + fileName;
+      });
+      
+      return;
+    }
+  }
+
+  function formatErrorObject (array){
+    return {
+      service:array[0].trim(),
+      codigo: array[1].trim(),
+      description: array[2].trim(),
+      count: parseFloat(array[3].trim())
+    }
+  }
+
+  function setErrorsServices (){
+    // Object.keys($scope.allServices).map(function(key) {
+    transactionsNames.forEach(function(name, indexName) {  
+      allErrorsServices.push([]);
+      var description = [];   
+      allErrorsDescriptions.push([]);    
+      allErrors.forEach(function(error) {
+        if(error.service == name){  
+
+          allErrorsServices[indexName].push(error);
+
+          if(description.length == 0){
+            description.push(error);
+            allErrorsDescriptions[indexName].push(error);
+          } 
+          else{ 
+            var matchIndex = description.contains(error.description, "description");
+            if(matchIndex == -1){
+              description.push(error);
+            }
+            else{
+              description[matchIndex].count += error.count;
+            } 
+          }
+        }
+      }, this);
+      allErrorsServices[indexName] = description;
+    }, this);
+
+    // allErrorsServices.forEach(function(error) {
+    //     if(error == []) 
+    //   }, this);
+
+    allErrorsServices = allErrorsServices.filter(function(item) { 
+      return item.length != 0;
+    })
+  }
+
+  function setErrors(services, firstSlice, fileName){ 
+
+    var allIndexBegin = findAll(stringToFindErrors, services.name.trim()); // obtengo todos los match en donde aparezca el servicio.
+    var error = null;
+
+
+    allIndexBegin.forEach(function(element) { // Obtengo los index de los lugares en donde aparece la transaccion
+      error = formatErrorObject(stringToFindErrors.slice(element, element + 150).split('#'));  // Obtengo la linea del error
+      // error.date = fileName;  // Obtengo la linea del error
+      allErrors.push(error);
+    }, this);
+
+  }
+
+
+  $scope.setErrorName = function(array){
+    return array[0][0] + "  " + array[array.length -1][3] + "  " + array[0][4] + " / " + array[array.length -2][7];
+  }
+
+  function calculateTotal(array, namesArray){
+    if(array == undefined) return;
+    // var baseLaength = array.length;
+    var servicesChartsData = {};
+    var groupChartsData = {};
+
+    // array.push([]);
+    var total = {
+      name: 0,
+      date: 0,
+      executed: 0,
+      successful: 0,
+      warning: 0,
+      successfulPercent: 0,
+      errors: 0,
+      errorsPercent: 0
+    };
+
+    array.forEach(function(element, index) {
+      if(element == undefined) return;
+      total.name = "Total";
+      total.date = "";
+      total.executed += element.executed;
+      total.successful += element.successful;
+      total.warning += element.warning;
+      total.errors += element.errors;      
+    }, this);
+
+    total.successfulPercent = (((total.successful +  total.warning)* 100)/total.executed).toFixed(2) + "%";
+    total.errorsPercent = ((total.errors * 100)/total.executed).toFixed(2) + "%";
+
+    array.push(total);
+
+    if(namesArray == "services"){ 
+      servicesChartsData = {
+        disponibility : parseFloat(total.successfulPercent),
+        errors : parseFloat(total.errorsPercent),
+        categories : array[0].name,
+      }
+
+      servicesCharts.push(servicesChartsData);
+    }
+
+    else if(namesArray == "groups"){ 
+      groupChartsData = {
+        disponibility : parseFloat(total.successfulPercent),
+        errors : parseFloat(total.errorsPercent),
+        categories : array[0].name,
+      }
+
+      groupCharts.push(groupChartsData);
+    }
+  }
+
+  function calculateErrorTotal(array){
+
+    var total = {
+      count: 0
+    };
+
+    array.forEach(function(element, index) {
+      total.count += element.count;
+    }, this);
+
+    array.push(total);
+
+  }
+
+  function findAll(completeString, stringName, indexReturn){
+    var match, matches = [];
+    var regexp = new RegExp(stringName,"g");
+
+    while (match = regexp.exec(completeString)) {
+      matches.push(match.index);
+    }
+    if(indexReturn == undefined){
+      return matches;
+    }
+    else{
+      return matches[indexReturn];
+    }
+  }
+
+  function sorByDate (array) {
+    if(array == undefined) return;
+    for(var i=1;i<array.length;i++)
+      {
+          for(var j=0;j<(array.length-i);j++)
+          {
+            if(array[j] == undefined || array[j+1] == undefined) return;
+              if(array[j].date > array[j+1].date)
+              {
+                  k=array[j+1];
+                  array[j+1] = array[j];
+                  array[j]=k;
+              }
+          }
+      }
+  }
+
+  function multiple(valor, multiple)
+    {
+        resto = valor % multiple;
+        if(resto==0)
+            return true;
+        else
+            return false;
+    }
+    }]);
+
+
+function setChart (array, idChart, rangeDate, servicesCharts){ 
+    var sectionDisponibility = [];  
+    var sectionErrorsPercent = [];
+    var categories = [];
+    var title = "";
+  if(idChart != "chart-all-services" && idChart !="chart-all-groups"){    
+    title = array[array.length-2].name + " "+ array[array.length-1].successfulPercent  + " ("+ rangeDate + ")";
+
+    array.forEach(function(element, index) {
+      if(array.length -1 == index) return;
+      sectionDisponibility.push(parseFloat(element.successfulPercent.trim()));
+      sectionErrorsPercent.push(parseFloat((100 - sectionDisponibility[index]).toFixed(2)));
+      
+      // totalPercent.push(100);
+      categories.push(element.date);
+    }, this);
+  }
+  else{
+
+    var bkpSection = servicesCharts[0];
+    servicesCharts.splice(0, 1);
+    servicesCharts.sort(function(a, b){ return a.disponibility - b.disponibility; }); 
+    servicesCharts.splice(0, 0, bkpSection);
+
+    servicesCharts.forEach(function(element, index) {
+    sectionDisponibility.push(element.disponibility);  
+    sectionErrorsPercent.push(element.errors);
+    categories.push(element.categories);
+    }, this);  
+
+    title = "Resumen de disponibilidad" + "(" + rangeDate + ")";
+  }
+
+  Highcharts.chart(idChart, {
+      credits: { enabled: false },
+      chart: {
+        type: 'column'
+    },
+    title: {
+        text: title,
+        style: {
+            textTransform: "uppercase"
+        }
+    },
+    xAxis: {
+        categories: categories,
+        style: {
+            textTransform: "uppercase"
+        }
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: ''
+        },
+        style: {
+            textTransform: "uppercase"
+        },
+        stackLabels: {
+            enabled: true,
+            style: {
+                fontWeight: 'bold',
+                textTransform: "uppercase",
+                color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+            }
+        }
+    },
+    legend: {
+        align: 'right',
+        x: -30,
+        verticalAlign: 'top',
+        y: 25,
+        floating: true,
+        backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
+        borderColor: '#CCC',
+        borderWidth: 1,
+        shadow: false
+    },
+    tooltip: {
+        headerFormat: '<b>{point.x}</b><br/>',
+        pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+    },
+    plotOptions: {
+        column: {
+            stacking: 'normal',
+            dataLabels: {
+                enabled: true,
+                color: '#072146'
+            }
+        }
+    },
+    series: [{
+      name: 'Errores',
+      data: sectionErrorsPercent,
+      color: "#dde3ea" 
+    }, {
+      name: 'Disponibilidad',
+      data: sectionDisponibility,
+      color: "#d8be75"
+             
+    }]
+  });
+}
+
+</script>
+
+</html>
